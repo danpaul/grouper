@@ -7,6 +7,9 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+var cookieParser = require('cookie-parser');
+var expressSession = require('express-session');
+
 var Sequelize = require('sequelize');
 
 var routes = require('./routes/index');
@@ -21,6 +24,9 @@ app.sequelize = new Sequelize('grouper', 'root', 'root', {
 
 app.models = require('./models.js').models(app.sequelize);
 
+// app.use(express.cookie-parser('2djFjH$i@c$M0lcOMnr0Z!3s'));
+// app.use(express.session());
+// app.use(app.router);
 
 // var test = require('./models.js')(app.sequelize);;
 
@@ -40,11 +46,14 @@ app.models = require('./models.js').models(app.sequelize);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
+app.use(cookieParser('2djFjH$i@c$M0lcOMnr0Z!3s'));
+app.use(expressSession({secret: '0ZY2arQLI5kqnEcK0p1rXBmX'}));
+
 app.use(favicon());
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
-app.use(cookieParser());
+// app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);

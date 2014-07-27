@@ -1,21 +1,64 @@
-// var app = require('../app');
-
 var express = require('express');
 var router = express.Router();
 var bcrypt = require('bcrypt');
 
-/* GET home page. */
+var reportGenericError = function(error){
+	console.log(error);
+	res.send({'error':['An error occured. Please try again.']});
+}
+
 router.get('/', function(req, res) {
   res.render('index', { title: 'Express' });
 });
 
-/* GET new form. */
+
+router.get('/api/login', function(req, res) {
+console.log(req.session);
+	res.render('login');
+});
+
+router.post('/api/login', function(req, res) {
+
+	var User = req.app.models.User;
+
+	// determine if username or email is being used
+	if( req.body.email == '' ){
+		var query = {where: {username: req.body.username}};
+	} else {
+		var query = {where: {email: req.body.email}};
+	}
+
+	// find user
+	User.find(query)
+		.success(function(user){
+			//check password
+			bcrypt.compare(req.body.password, user.password, function(err, valid) {
+				if(err){
+					reportGenericError(error);
+				} else {
+					if( valid ){
+						req.session.loggedIn = true;
+						res.send(true);
+					} else {
+						res.send({'password':['The password is not valid.']});
+					}
+				}
+			});
+		})
+		.error(function(error){
+			reportGenericError(error);
+		})
+});
+
+router.get('/api/logout', function(req, res) {
+	req.session.loggedIn = false;
+	res.render('login');
+});
+
 router.get('/api/register', function(req, res) {
-  // console.log(req.app);
   res.render('register');
 });
 
-/* GET new form. */
 router.post('/api/register', function(req, res) {
 
 	var User = req.app.models.User;
@@ -73,21 +116,18 @@ router.post('/api/register', function(req, res) {
 							  		console.log(user);
 								})
 								.error(function(error){
-									console.log(error);
-							  		res.send({'error':['a An error occured. Please try again.']});
-							  	});
+									reportGenericError(error);							
+								});
 						}
 					});
 				})
 		})
 		.error(function(error){
-			console.log(error);
-			res.send({'error':['b An error occured. Please try again.']});
+			reportGenericError(error);
 		})
 
 });
 
-/* GET new form. */
 router.get('/api/new-post', function(req, res) {
   res.render('newpost');
 });

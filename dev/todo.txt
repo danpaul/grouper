@@ -12,3 +12,4 @@ Deploy:
 	- set error handeling in app.js
 	- update db creds
 	- setup Redis or Mongo for session storage
+	- remove novalidate from forms

@@ -20,13 +20,7 @@ module.exports.models = function(sequelize){
 			unique: true
 		},
 		password: {
-			type: Sequelize.STRING,
-			// validate: {
-			// 	len:{
-			// 		args: [8,24],
-			// 		msg: 'The password must be between 8 and 24 characters.'
-			// 	}
-			// }
+			type: Sequelize.STRING
 		} 
 	});
 
