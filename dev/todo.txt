@@ -1,0 +1,14 @@
+
+- add config with DB creds
+
+- add indexes
+	+ percentages
+	+ totals
+	+ user.username
+
+Deploy:
+	- remove auto update from schema.js
+	- create cluster if on multi-core
+	- set error handeling in app.js
+	- update db creds
+	- setup Redis or Mongo for session storage
