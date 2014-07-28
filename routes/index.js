@@ -7,14 +7,24 @@ var reportGenericError = function(error){
 	res.send({'error':['An error occured. Please try again.']});
 }
 
+var getFlashMessage = function(req){
+	if( req.query.f !== undefined && flashCodes[req.query.f] !== undefined ){
+		return flashCodes[req.query.f]
+	}
+	return null;
+}
+
+var flashCodes = {
+	1: 'You must be logged in.'
+}
+
 router.get('/', function(req, res) {
   res.render('index', { title: 'Express' });
 });
 
-
 router.get('/api/login', function(req, res) {
-console.log(req.session);
-	res.render('login');
+	// getFlashMessage(req);
+	res.render('login', { flash: getFlashMessage(req) });
 });
 
 router.post('/api/login', function(req, res) {
@@ -51,8 +61,13 @@ router.post('/api/login', function(req, res) {
 });
 
 router.get('/api/logout', function(req, res) {
+
+
+
+
 	req.session.loggedIn = false;
-	res.render('login');
+
+	res.render('login', {flashMessage: getFlashMessage(req) });
 });
 
 router.get('/api/register', function(req, res) {
@@ -129,7 +144,10 @@ router.post('/api/register', function(req, res) {
 });
 
 router.get('/api/new-post', function(req, res) {
-  res.render('newpost');
+	if( req.session.loggedIn !== true ){
+		res.redirect(302, '/api/login?f=1');
+	}
+	res.render('newpost');
 });
 
 router.post('/api/new-post', function(req, res) {

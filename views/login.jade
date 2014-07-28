@@ -3,6 +3,8 @@ html(lang="en")
 	head
 	body
 		h1 Login
+		if( flash !== null )
+			p= flash
 		form(action="/api/login" method="POST" novalidate)
 			div
 				label EMAIL: 
