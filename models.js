@@ -24,10 +24,25 @@ module.exports.models = function(sequelize){
 		} 
 	});
 
-
 	models.Post = sequelize.define('Post', {
-		url: Sequelize.STRING,
-		title: Sequelize.STRING,
+		title: {
+			type: Sequelize.STRING,
+			validate: {
+				len:{
+					args: [2, 255],
+					msg: 'The title must be between 2 and 255 characters.'					
+				}
+			}
+		},
+		url: {
+			type: Sequelize.STRING,
+			validate: {
+				isUrl: {
+					args: [true],
+					msg: 'The URL is not valid.'
+				}
+			}
+		},
 		user: {
 			type: Sequelize.INTEGER,
 			references: models.User,

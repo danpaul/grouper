@@ -5,7 +5,7 @@ html(lang="en")
 		h1 Login
 		if( flash !== null )
 			p= flash
-		form(action="/api/login" method="POST" novalidate)
+		form(action="/api/user/login" method="POST" novalidate)
 			div
 				label EMAIL: 
 				input(type="email", name="email")
