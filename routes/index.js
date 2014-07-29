@@ -182,7 +182,7 @@ console.log(req.body.url);
 	var post = req.app.models.Post.build({
 		url: req.body.url,
 		title: req.body.title,
-		id: req.session.user.id
+		user: req.session.user.id
 	});
 
 	// validate post
