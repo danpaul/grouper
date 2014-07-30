@@ -1,6 +1,8 @@
 
 - add config with DB creds
 
+- parse urls and add http if ommited
+
 - add indexes
 	+ percentages
 	+ totals

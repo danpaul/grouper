@@ -15,7 +15,7 @@ var checkLogin = function(req, res){
 
 var reportGenericError = function(error){
 	console.log(error);
-	res.send({'error':['An error occured. Please try again.']});
+	res.end({'error':['An error occured. Please try again.']});
 }
 
 var getFlashMessage = function(req){
@@ -65,10 +65,9 @@ router.post('/api/user/login', function(req, res) {
 						req.session.loggedIn = true;
 						req.session.user = {};
 						req.session.user.id = user.id;
-						res.send(true);
+						res.end(true);
 					} else {
-						res.send({'password':['The password is not valid.']});
-						return;
+						res.end({'password':['The password is not valid.']});
 					}
 				}
 			});
@@ -100,7 +99,7 @@ router.post('/api/user/register', function(req, res) {
 
 			// send error if user with email already exists
 			if( user !== null ){
-				res.send({'email':["A user with this email already exists."]});
+				res.end({'email':["A user with this email already exists."]});
 				return;
 			}
 
@@ -109,20 +108,17 @@ router.post('/api/user/register', function(req, res) {
 				.success(function(user){
 
 					if( user !== null ){
-						res.send({'username':["This username has already been taken."]});
-						return;
+						res.end({'username':["This username has already been taken."]});
 					}
 
 					// confirm passwords match
 					if( req.body.password !==  req.body.confirmpassword ){
-						res.send({'password':["The passwords do not match."]});
-						return;
+						res.end({'password':["The passwords do not match."]});
 					}
 
 					// confirm passwords length
 					if( !(req.body.password.length >= 8 && req.body.password.length <= 64) ){
-						res.send({'password':["The passwords must be between 8 and 64 characters."]});
-						return;
+						res.end({'password':["The passwords must be between 8 and 64 characters."]});
 					}
 
 					// construct user
@@ -136,8 +132,7 @@ router.post('/api/user/register', function(req, res) {
 					var validationResult = user.validate();
 
 					if( validationResult !== null ){
-						res.send(validationResult);
-						return;
+						res.end(validationResult);
 					}
 
 					// hash password
@@ -148,8 +143,7 @@ router.post('/api/user/register', function(req, res) {
 							user.password = hash;
 							user.save()
 								.success(function(user){
-									res.send(true);
-									return;
+									res.end(true);
 								})
 								.error(function(error){
 									reportGenericError(error);							
@@ -164,8 +158,9 @@ router.post('/api/user/register', function(req, res) {
 });
 
 /********************************************************************************
-				POST
+				POSTS
 ********************************************************************************/
+
 
 router.get('/api/post/new', function(req, res) {
 	checkLogin(req, res);
@@ -175,8 +170,6 @@ router.get('/api/post/new', function(req, res) {
 router.post('/api/post/new', function(req, res){
 
 	checkLogin(req, res);
-
-console.log(req.body.url);
 
 	// construct post
 	var post = req.app.models.Post.build({
@@ -189,16 +182,33 @@ console.log(req.body.url);
 	var validationResult = post.validate();
 
 	if( validationResult !== null ){
-		res.send(validationResult);
-		return;
+		res.end(validationResult);
 	}
 
 	post.save()
 		.success(function(post){
-			res.send(true);
-			return;
+			res.end(true);
 		})
 		.error(reportGenericError)
+});
+
+router.get('/api/posts/all', function(req, res) {
+
+	req.app.models.Post.findAll()
+		.success(function(posts){
+console.log(posts[0].id);
+			res.render('allposts', { posts: posts });
+		})
+		.error(reportGenericError);
+
+
+
+// res.send('foo');
+
+	// res.render
+	// res.end(posts);
+	// checkLogin(req, res);
+	// res.render('newpost');
 });
 
 module.exports = router;
