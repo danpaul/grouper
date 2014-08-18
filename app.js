@@ -24,23 +24,15 @@ app.sequelize = new Sequelize('grouper', 'root', 'root', {
 
 app.models = require('./models.js').models(app.sequelize);
 
-// app.use(express.cookie-parser('2djFjH$i@c$M0lcOMnr0Z!3s'));
-// app.use(express.session());
-// app.use(app.router);
-
-// var test = require('./models.js')(app.sequelize);;
-
-// console.log(app.models);
-
-// app.sequelize
-//     .sync({ force: true })
-//     .complete(function(err) {
-//         if (!!err) {
-//             console.log('An error occurred while creating the table:', err);
-//         } else {
-//             console.log('It worked!');
-//         }
-//     });
+app.sequelize
+    .sync({ force: true })
+    .complete(function(err) {
+        if (!!err) {
+            console.log('An error occurred while creating the table:', err);
+        } else {
+            console.log('It worked!');
+        }
+    });
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

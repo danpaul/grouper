@@ -1,9 +1,31 @@
+var p = function(s){
+	console.log(JSON.stringify(s));
+}
+
+
 var express = require('express');
 var router = express.Router();
 var bcrypt = require('bcrypt');
 
+var UPVOTE = 0;
+var DOWNVOTE = 1;
+
 /********************************************************************************
-				HELPER FUNCTIONS AND DATA
+				CONSTANT DATA
+********************************************************************************/
+
+var flashCodes = {
+	1: 'You must be logged in.',
+	2: 'The user is invalid.'
+}
+
+var voteMap =  {
+	'down': 0,
+	'up': 1
+}
+
+/********************************************************************************
+				HELPER FUNCTIONS
 ********************************************************************************/
 
 var checkLogin = function(req, res){
@@ -13,9 +35,17 @@ var checkLogin = function(req, res){
 	}
 }
 
-var reportGenericError = function(error){
+var reportGenericError = function(error, response){
 	console.log(error);
-	res.end({'error':['An error occured. Please try again.']});
+
+	if(typeof(res) === 'undefined'){ var r = response; }
+	// r.end({'error':['An error occured. Please try again.']});
+	r.send({'error':[error]});
+}
+
+var reportHiddenError = function(error, response){
+	console.log(error);
+	r.send({'error':['An error occured. Please try again.']});
 }
 
 var getFlashMessage = function(req){
@@ -23,11 +53,6 @@ var getFlashMessage = function(req){
 		return flashCodes[req.query.f]
 	}
 	return null;
-}
-
-var flashCodes = {
-	1: 'You must be logged in.',
-	2: 'The user is invalid.'
 }
 
 // router.get('/', function(req, res) {
@@ -65,9 +90,11 @@ router.post('/api/user/login', function(req, res) {
 						req.session.loggedIn = true;
 						req.session.user = {};
 						req.session.user.id = user.id;
-						res.end(true);
+						res.send(true);
+						return;
 					} else {
-						res.end({'password':['The password is not valid.']});
+						res.send({'password':['The password is not valid.']});
+						return;
 					}
 				}
 			});
@@ -143,7 +170,7 @@ router.post('/api/user/register', function(req, res) {
 							user.password = hash;
 							user.save()
 								.success(function(user){
-									res.end(true);
+									res.send(true);
 								})
 								.error(function(error){
 									reportGenericError(error);							
@@ -152,9 +179,10 @@ router.post('/api/user/register', function(req, res) {
 					});
 				})
 		})
-		.error(function(error){
-			reportGenericError(error);
-		})
+		// .error(function(error){
+		// 	reportGenericError(error);
+		// })
+		.error(reportGenericError);
 });
 
 /********************************************************************************
@@ -187,7 +215,17 @@ router.post('/api/post/new', function(req, res){
 
 	post.save()
 		.success(function(post){
-			res.end(true);
+			// create row for totals
+			// postVoteTotal = req.app.models.PostVoteTotal.create(function(postVoteTotal){
+			// 	post: post.id,
+			// 	up: 0,
+			// 	down: 0,
+			// 	total: 0,
+			// 	percentageUp: 0.0
+			// });
+
+			res.send(true);
+			return;
 		})
 		.error(reportGenericError)
 });
@@ -196,19 +234,98 @@ router.get('/api/posts/all', function(req, res) {
 
 	req.app.models.Post.findAll()
 		.success(function(posts){
-console.log(posts[0].id);
 			res.render('allposts', { posts: posts });
 		})
 		.error(reportGenericError);
+});
 
 
+router.post('/api/post/vote', function(req, res) {
 
-// res.send('foo');
-
-	// res.render
-	// res.end(posts);
 	// checkLogin(req, res);
-	// res.render('newpost');
+
+	var Post = req.app.models.Post;
+	var UserVote = req.app.models.UserVote;
+	var postId = req.body.id;
+	var vote = req.body.vote;
+	// var userId = req.session.user.id;
+
+userId = 1;
+
+	// confirm postId is set
+	if( typeof(postId) === 'undefined' ){
+		reportGenericError('Invalid user or post ID', res);
+		return;
+	}
+
+	// confirm a valid vote is present
+	if( !(vote === 'up' || vote === 'down') ){
+		reportGenericError('Invalid vote.', res);
+		return;
+	}
+
+	// confirm post exists
+	Post.find(postId)
+		.success(function(post){
+			if( post === null ){
+				reportGenericError('Post ID not found.', res);
+				return;
+			}
+
+			// confirm user has not yet vote for post
+			UserVote.find(post.id)
+			.success(function(userVote){
+				if( userVote !== null ){
+					reportGenericError('You  have already voted for this post.', res);
+					return;
+				}
+
+				// save user vote
+				UserVote.create({
+					vote: voteMap[vote],
+					user: userId,
+					post: postId
+				})
+				.success(function(vote){
+					// update total votes
+
+					// find or create vote total
+					req.app.Models.PostVoteTotal.find({where: {post: post.id}})
+					.success(function(postVoteTotal)){
+						// if post doesn't exist, create it
+						if(postVoteTotal === null){
+							req.app.Models.PostVoteTotal.create({
+								
+							})
+
+
+						}else{
+							postVoteTotal
+						}
+
+					}
+					.error(function(e){ reportHiddenError(e, res); })
+					//update group votes
+
+
+					res.send(true);
+					return;
+				})
+				.error(function(){
+					reportGenericError('Unable to save record.', res)
+				})
+
+			})
+			.error(function(){
+				reportGenericError('Unable to retrieve record.', res)
+			})
+
+		})
+		.error(function(e){
+			reportGenericError(e, res);
+			return;
+		})
+
 });
 
 module.exports = router;

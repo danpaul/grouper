@@ -17,6 +17,6 @@
     "mysql": "*",
     "bcrypt": "*",
     "cookie-parser": "*",
-    "cookie-parser": "express-session"
+    "express-session": "*"
   }
 }

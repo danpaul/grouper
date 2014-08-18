@@ -85,10 +85,10 @@ module.exports.models = function(sequelize){
 			references: models.Post,
 			referencesKey: "id"
 		},
-		plus: Sequelize.INTEGER,
-		minus: Sequelize.INTEGER,
+		up: Sequelize.INTEGER,
+		down: Sequelize.INTEGER,
 		total: Sequelize.INTEGER,
-		percentagePlus: Sequelize.FLOAT
+		percentageUp: Sequelize.FLOAT
 	});
 
 	models.PostGroupVote = sequelize.define('PostGroupVote', {
@@ -102,10 +102,10 @@ module.exports.models = function(sequelize){
 			references: models.Group,
 			referencesKey: "id"
 		},
-		plus: Sequelize.INTEGER,
-		minus: Sequelize.INTEGER,
+		up: Sequelize.INTEGER,
+		down: Sequelize.INTEGER,
 		total: Sequelize.INTEGER,
-		percentagePlus: Sequelize.FLOAT
+		percentageUp: Sequelize.FLOAT
 	});
 
 	models.UserGroupAgreement = sequelize.define('UserGroupAgreement', {
