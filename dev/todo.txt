@@ -9,6 +9,13 @@
 	+ totals
 	+ user.username
 
+- on delete cascade for foreign keys
+
+- implement automated group testing
+
+
+
+
 Deploy:
 	- remove auto update from schema.js
 	- create cluster if on multi-core
@@ -16,3 +23,4 @@ Deploy:
 	- update db creds
 	- setup Redis or Mongo for session storage
 	- remove novalidate from forms
+

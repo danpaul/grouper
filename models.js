@@ -61,7 +61,7 @@ module.exports.models = function(sequelize){
 			type: Sequelize.INTEGER,
 			references: models.Post,
 			referencesKey: "id"
-		}	  
+		} 
 	});
 
 	models.Group = sequelize.define('Group', { });

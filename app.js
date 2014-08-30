@@ -1,3 +1,15 @@
+/*
+
+
+To start: npm start
+start nodemon: nodemon ./bin/www
+
+Sequlizer DB sync issue: in development, delete DB, uncomment app.sequelize sync
+    block. start app. comment out app.sequelize sync block, restart
+
+*/
+
+
 //  nodemon bin/www
 
 var express = require('express');
@@ -14,6 +26,7 @@ var Sequelize = require('sequelize');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var posts = require('./routes/posts');
 
 var app = express();
 
@@ -24,15 +37,21 @@ app.sequelize = new Sequelize('grouper', 'root', 'root', {
 
 app.models = require('./models.js').models(app.sequelize);
 
-app.sequelize
-    .sync({ force: true })
-    .complete(function(err) {
-        if (!!err) {
-            console.log('An error occurred while creating the table:', err);
-        } else {
-            console.log('It worked!');
-        }
-    });
+
+
+
+// app.sequelize
+//     .sync({ force: true })
+//     .complete(function(err) {
+//         if (!!err) {
+//             console.log('An error occurred.', err);
+//         } else {
+//             console.log('It worked!');
+//         }
+//     });
+
+
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -49,7 +68,8 @@ app.use(bodyParser.urlencoded());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
-app.use('/users', users);
+app.use('/', users);
+app.use('/', posts);
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -81,6 +101,9 @@ app.use(function(err, req, res, next) {
         error: {}
     });
 });
+
+// app.listen(3000);
+
 
 
 module.exports = app;

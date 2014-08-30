@@ -1,0 +1,7 @@
+
+
+
++ user votes
+	- user-votes gets updated
+	- each group that user belongs to gets vote updated
+	- total votes get updated
