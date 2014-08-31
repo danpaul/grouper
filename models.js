@@ -1,6 +1,12 @@
 var Sequelize = require('sequelize');
 
-module.exports.models = function(sequelize){
+var sequelize = new Sequelize('grouper', 'root', 'root', {
+    dialect: "mysql",
+    port: 8889,
+});
+
+// module.exports.models = function(sequelize){
+module.exports.models = function(){
 
 	var models = {};
 

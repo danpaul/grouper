@@ -1,44 +1,29 @@
 var express = require('express');
 var router = express.Router();
 
+var models = require('../models.js').models();
+
+var helpers = require('../inc/helpers.js');
+
+/********************************************************************************
+				CONSTANTS / DATA
+********************************************************************************/
 
 var UPVOTE = 0;
 var DOWNVOTE = 1;
+var VOTE_MAP = {
+	up: 0,
+	down: 1
+};
 
-
+var Post = models.Post;
+var PostVoteTotal = models.PostVoteTotal;
+var UserVote = models.UserVote;
 
 
 /********************************************************************************
-				HELPER FUNCTIONS
+			FUNCTIONS
 ********************************************************************************/
-
-var checkLogin = function(req, res){
-	if( req.session.loggedIn !== true ){
-		res.redirect(302, '/api/user/login?f=1');
-		return;
-	}
-}
-
-var reportGenericError = function(error, response){
-	console.log(error);
-
-	if(typeof(res) === 'undefined'){ var r = response; }
-	// r.end({'error':['An error occured. Please try again.']});
-	r.send({'error':[error]});
-}
-
-var reportHiddenError = function(error, response){
-	console.log(error);
-	r.send({'error':['An error occured. Please try again.']});
-}
-
-var getFlashMessage = function(req){
-	if( req.query.f !== undefined && flashCodes[req.query.f] !== undefined ){
-		return flashCodes[req.query.f]
-	}
-	return null;
-}
-
 
 
 // creates a new record for a post and calls callback of form
@@ -59,23 +44,61 @@ var createPostVoteTotal = function(postVoteTotal, postId, callback){
 		callback(false);
 	})
 
-// if error, callback with error
+	// if error, callback with error
 	.error(function(error) {
 		callback(error);
 	})
 }
 
-router.get('/', function(req, res) {
-  // res.render('index', { title: 'Express' });
-  res.send('home');
+
+var updatePostVoteTotal = function(postId, mappedVote){
+
+	// find post vote total
+	PostVoteTotal.find({where: {post: postId}})
+	.success(function(postVoteTotal){
+
+		// confirm valid record is returned
+		if(postVoteTotal === null){
+			console.log('Unable to retrieve post: ' + postId);
+			return;
+		}
+
+		// increment correct value and adjust percentageUp and total vote
+		var incrementField = 'up';
+		if( mappedVote === DOWNVOTE ){ var incrementField = 'down'; }
+
+		postVoteTotal.increment( incrementField, {by: 1}).success(function(pvt){ 
+			pvt.reload().success(function(pvt){
+				pvt.percentageUp = calculatePercentagUp(pvt.up, pvt.down);
+				pvt.total = pvt.up + pvt.down;
+				pvt.save().error(function(err){ console.log(err); });
+			})
+			.error(function(err){ console.log(err);	})
+		})
+		.error(function(err){ console.log(err);	});
+	})
+	.error(function(err){ console.log(err);	})
+}
+
+
+var calculatePercentagUp = function(upVotes, downVotes){
+
+	if( downVotes <= 0.0 ){
+		if( upVotes >= 0.0 ){
+			return 1.0;
+		} else {
+			return 0.0
+		}
+	} 
+	if( upVotes <= 0.0 ){ return 0.0; }
+	return(upVotes / (upVotes + downVotes));
+}
+
+//////test
+router.get('/test', function(req, res) {
+	res.send('foo');
+	setTimeout(function(){ console.log('bar'); }, 3000);
 });
-
-
-
-
-
-
-
 
 
 
@@ -87,17 +110,17 @@ router.get('/', function(req, res) {
 
 // new post get request
 router.get('/api/post/new', function(req, res) {
-	checkLogin(req, res);
+	helpers.checkLogin(req, res);
 	res.render('newpost');
 });
 
 // add new post (post request)
 router.post('/api/post/new', function(req, res){
 
-	checkLogin(req, res);
+	helpers.checkLogin(req, res);
 
 	// construct post
-	var post = req.app.models.Post.build({
+	var post = Post.build({
 		url: req.body.url,
 		title: req.body.title,
 		user: req.session.user.id
@@ -107,28 +130,18 @@ router.post('/api/post/new', function(req, res){
 	var validationResult = post.validate();
 
 	if( validationResult !== null ){
-		res.end(validationResult);
+		res.send(validationResult);
+		return;
 	}
 
 	post.save()
 		.success(function(post){
-			// create row for totals
-			// postVoteTotal = req.app.models.PostVoteTotal.create(function(postVoteTotal){
-			// 	post: post.id,
-			// 	up: 0,
-			// 	down: 0,
-			// 	total: 0,
-			// 	percentageUp: 0.0
-			// });
-
-// var createPostVoteTotal = function(postVoteTotal, postId, callback){
-
 			createPostVoteTotal(
-				req.app.models.PostVoteTotal,
+				PostVoteTotal,
 				post.id,				
 				function(err){
 					if( err ){
-						reportGenericError(err);
+						helpers.reportGenericError(err);
 						return;
 					} else {
 						res.send(true);
@@ -136,114 +149,111 @@ router.post('/api/post/new', function(req, res){
 					}
 			});
 		})
-		.error(reportGenericError)
+		.error(helpers.reportGenericError)
 });
 
+// display all posts
 router.get('/api/posts/all', function(req, res) {
 
-	req.app.models.Post.findAll()
+	Post.findAll()
 		.success(function(posts){
 			res.render('allposts', { posts: posts });
 		})
-		.error(reportGenericError);
+		.error(helpers.reportGenericError);
 });
-
 
 /********************************************************************************
 				VOTES
 ********************************************************************************/
 
 
-// display all posts
 router.post('/api/post/vote', function(req, res) {
 
-	// checkLogin(req, res);
-
-res.send('foo');
-return;
-
-	var Post = req.app.models.Post;
-	var UserVote = req.app.models.UserVote;
+	// helpers.checkLogin(req, res);
 
 	var postId = req.body.id;
 	var vote = req.body.vote;
-	var userId = req.session.user.id;
+	// var userId = req.session.user.id;
+
+
 
 userId = 1;
 
+
+
 	// confirm postId is set
 	if( typeof(postId) === 'undefined' ){
-		reportGenericError('Invalid user or post ID', res);
+		helpers.reportGenericError('Invalid user or post ID', res);
 		return;
 	}
 
 	// confirm a valid vote is present
 	if( !(vote === 'up' || vote === 'down') ){
-		reportGenericError('Invalid vote.', res);
+		helpers.reportGenericError('Invalid vote.', res);
 		return;
 	}
+
+	// set mapped vote value
+	var mappedVote = VOTE_MAP[vote];
 
 	// confirm post exists
 	Post.find(postId)
 		.success(function(post){
 			if( post === null ){
-				reportGenericError('Post ID not found.', res);
+				helpers.reportGenericError('Post ID not found.', res);
 				return;
 			}
 
 			// confirm user has not yet voted for post
 			UserVote.find(post.id)
 			.success(function(userVote){
+
+				// if uservote already exists, return error
 				if( userVote !== null ){
-					reportGenericError('You  have already voted for this post.', res);
+					helpers.reportGenericError('You  have already voted for this post.', res);
 					return;
 				}
 
 				// if uservote doesn't exist, create it
 				UserVote.create({
-					vote: voteMap[vote],
+					vote: mappedVote,
 					user: userId,
 					post: postId
 				})
-				.success(function(vote){
-					// update total votes
+				.success(function(voteObject){
 
+					// send response and continue processing
+					res.send(true);
 
-
-
-					// find or create vote total
-					req.app.Models.PostVoteTotal.find({where: {post: post.id}})
+					// find vote total
+					PostVoteTotal.find({where: {post: post.id}})
 					.success(function(postVoteTotal){
 
-						// if post vote doesn't exist, create it
-						if(postVoteTotal === null){
-							req.app.Models.PostVoteTotal.create({
-
-							})
-						}else{
-							postVoteTotal
-						}
+						// update post vote total( postVoteTotal is created automatically when
+						//		a new post is created)
+						updatePostVoteTotal(post.id, mappedVote);
 
 					})
-					.error(function(e){ reportHiddenError(e, res); })
+					.error(function(e){ helpers.reportHiddenError(e, res); })
 					//update group votes
 
-
-					res.send(true);
+					
 					return;
 				})
 				.error(function(){
-					reportGenericError('Unable to save record.', res)
+					helpers.reportGenericError('Unable to save record.', res)
+					return;
 				})
 
 			})
 			.error(function(){
-				reportGenericError('Unable to retrieve record.', res)
+				helpers.reportGenericError('Unable to retrieve record.', res);
+				return;
 			})
 
 		})
 		.error(function(e){
-			reportGenericError(e, res);
+			helpers.reportGenericError(e, res);
 			return;
 		})
 

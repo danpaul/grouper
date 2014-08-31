@@ -24,3 +24,6 @@ Deploy:
 	- setup Redis or Mongo for session storage
 	- remove novalidate from forms
 
+
+
+UserVote not accurate up/down

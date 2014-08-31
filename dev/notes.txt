@@ -1,7 +1,20 @@
-
-
-
 + user votes
 	- user-votes gets updated
 	- each group that user belongs to gets vote updated
 	- total votes get updated
+
++ vote process
+	- vote, updates total
+
++ user history, (do not view same post twice)
+
++ are votes qued?
+
++ comment system
+
++ post groupings
+	- totally new
+	- too new to have a group rating but not to have a total rating
+	- old enough to have group ratings
+
++ how to determine when to start a group evaluation for a post?

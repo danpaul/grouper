@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var bcrypt = require('bcrypt');
 
+var helpers = require('../inc/helpers.js')
+
 /********************************************************************************
 				CONSTANT DATA
 ********************************************************************************/
@@ -12,28 +14,8 @@ var flashCodes = {
 }
 
 /********************************************************************************
-				HELPER FUNCTIONS
+				FUNCTIONS
 ********************************************************************************/
-
-var checkLogin = function(req, res){
-	if( req.session.loggedIn !== true ){
-		res.redirect(302, '/api/user/login?f=1');
-		return;
-	}
-}
-
-var reportGenericError = function(error, response){
-	console.log(error);
-
-	if(typeof(res) === 'undefined'){ var r = response; }
-	// r.end({'error':['An error occured. Please try again.']});
-	r.send({'error':[error]});
-}
-
-var reportHiddenError = function(error, response){
-	console.log(error);
-	r.send({'error':['An error occured. Please try again.']});
-}
 
 var getFlashMessage = function(req){
 	if( req.query.f !== undefined && flashCodes[req.query.f] !== undefined ){
@@ -42,42 +24,8 @@ var getFlashMessage = function(req){
 	return null;
 }
 
-
-
-// creates a new record for a post and calls callback of form
-//		callback(error) on completions
-var createPostVoteTotal = function(postVoteTotal, postId, callback){
-
-	// create row for totals
-	postVoteTotal = postVoteTotal.create({
-		post: postId,
-		up: 0,
-		down: 0,
-		total: 0,
-		percentageUp: 0.0
-	})
-
-	// if success, callback without error
-	.success(function(){
-		callback(false);
-	})
-
-// if error, callback with error
-	.error(function(error) {
-		callback(error);
-	})
-}
-
-router.get('/', function(req, res) {
-  // res.render('index', { title: 'Express' });
-  res.send('home');
-});
-
-
-
-
 /********************************************************************************
-				USER MANAGEMENT
+				USER LOGIN
 ********************************************************************************/
 
 router.get('/api/user/login', function(req, res) {
@@ -90,12 +38,12 @@ router.post('/api/user/login', function(req, res) {
 
 	//ensure username or email is set
 	if( typeof(req.body.username) !== 'string' && typeof(req.body.email) !== 'string' ){
-		reportGenericError('Username or or email must be set.', res);
+		helpers.reportGenericError('Username or or email must be set.', res);
 		return;
 	}
 
 	if( typeof(req.body.password) !== 'string' || req.body.password === '' ){
-		reportGenericError('Password must be set.', res);
+		helpers.reportGenericError('Password must be set.', res);
 		return;
 	}
 
@@ -116,14 +64,14 @@ router.post('/api/user/login', function(req, res) {
 
 			// check if user exists
 			if( user === null ){
-				reportGenericError('Username or email is not correct or not registered.', res);
+				helpers.reportGenericError('Username or email is not correct or not registered.', res);
 				return;
 			}
 
 			//check password
 			bcrypt.compare(req.body.password, user.password, function(err, valid) {
 				if(err){
-					reportGenericError(error);
+					helpers.reportGenericError(error);
 				} else {
 					if( valid ){
 						req.session.loggedIn = true;
@@ -139,7 +87,7 @@ router.post('/api/user/login', function(req, res) {
 			});
 		})
 		.error(function(error){
-			reportGenericError(error);
+			helpers.reportGenericError(error);
 		})
 });
 
@@ -148,6 +96,10 @@ router.get('/api/user/logout', function(req, res) {
 	req.session.destroy();
 	res.render('login', {flashMessage: getFlashMessage(req) });
 });
+
+/********************************************************************************
+				USER REGISTER
+********************************************************************************/
 
 router.get('/api/user/register', function(req, res) {
   res.render('register');
@@ -210,16 +162,16 @@ router.post('/api/user/register', function(req, res) {
 									res.send(true);
 								})
 								.error(function(error){
-									reportGenericError(error);							
+									helpers.reportGenericError(error);							
 								});
 						}
 					});
 				})
 		})
 		// .error(function(error){
-		// 	reportGenericError(error);
+		// 	helpers.reportGenericError(error);
 		// })
-		.error(reportGenericError);
+		.error(helpers.reportGenericError);
 });
 
 

@@ -30,12 +30,14 @@ var posts = require('./routes/posts');
 
 var app = express();
 
-app.sequelize = new Sequelize('grouper', 'root', 'root', {
-    dialect: "mysql",
-    port: 8889,
-});
+// app.sequelize = new Sequelize('grouper', 'root', 'root', {
+//     dialect: "mysql",
+//     port: 8889,
+// });
 
-app.models = require('./models.js').models(app.sequelize);
+// app.models = require('./models.js').models(app.sequelize);
+
+app.models = require('./models.js').models();
 
 
 
