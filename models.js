@@ -125,10 +125,13 @@ module.exports.models = function(){
 			references: models.Group,
 			referencesKey: "id"
 		},
-		agree: Sequelize.INTEGER,
-		disagree: Sequelize.INTEGER,
-		agreePercentage: Sequelize.FLOAT
+		up: Sequelize.INTEGER,
+		down: Sequelize.INTEGER,
+		total: Sequelize.INTEGER,
+		percentageUp: Sequelize.FLOAT
 	});
+
+// sequelize.sync();
 
 	return models;
 }

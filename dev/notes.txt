@@ -20,3 +20,16 @@
 + how to determine when to start a group evaluation for a post?
 
 + user que should get update after user makes initial request so that processing takes place before user makes "next post request"
+
++ weights
+	- freshness (set cron job to degrade posts value gradually)
+	- total number of votes(activity)
+	- up percentage
+
++ what about classic posts? should new users be able to see archived posts? maybe set a cron job to occasionally look though group archives and find very popular things
+
++ users should have active/inactive status
+
++ spam
+	- users have reputation points
+	- users with high reputation must validate new user posts before they go live

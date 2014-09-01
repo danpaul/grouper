@@ -1,3 +1,13 @@
+- NEED TO TEST update user group agreement
+
+- start implementing testing
+
+- start implementing sort script
+
+
+
+
+
 - find out if it's possible to increment and DB column field and have percentage column get updated in the same query (to avoid potential overwrite situations(i.e. one user reads, second user reads, first user writes, second user overwrite first user))
 
 - add config with DB creds
@@ -13,7 +23,7 @@
 
 - implement automated group testing
 
-
+- ensure all sequelize operations use getters and setters: http://sequelizejs.com/docs/1.7.8/models
 
 
 Deploy:
