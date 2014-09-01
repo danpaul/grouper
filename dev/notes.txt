@@ -18,3 +18,5 @@
 	- old enough to have group ratings
 
 + how to determine when to start a group evaluation for a post?
+
++ user que should get update after user makes initial request so that processing takes place before user makes "next post request"

@@ -18,6 +18,7 @@ var VOTE_MAP = {
 
 var Group = models.Group;
 var Post = models.Post;
+var PostGroupVote = models.PostGroupVote;
 var PostVoteTotal = models.PostVoteTotal;
 var User = models.User;
 var UserGroup = models.UserGroup;
@@ -54,7 +55,9 @@ var createPostVoteTotal = function(postVoteTotal, postId, callback){
 }
 
 
-var updatePostVoteTotal = function(postId, mappedVote){
+// updates vote for postVoteTotal
+// vote is either 0 or 1
+var updatePostVoteTotal = function(postId, vote, callback){
 
 	// find post vote total
 	PostVoteTotal.find({where: {post: postId}})
@@ -62,23 +65,12 @@ var updatePostVoteTotal = function(postId, mappedVote){
 
 		// confirm valid record is returned
 		if(postVoteTotal === null){
-			console.log('Unable to retrieve post: ' + postId);
+			callback('Unable to retrieve post: ' + postId);
 			return;
 		}
 
-		// increment correct value and adjust percentageUp and total vote
-		var incrementField = 'up';
-		if( mappedVote === DOWNVOTE ){ var incrementField = 'down'; }
+		updateVote(postVoteTotal, vote, callback);
 
-		postVoteTotal.increment( incrementField, {by: 1}).success(function(pvt){ 
-			pvt.reload().success(function(pvt){
-				pvt.percentageUp = calculatePercentageUp(pvt.up, pvt.down);
-				pvt.total = pvt.up + pvt.down;
-				pvt.save().error(function(err){ console.log(err); });
-			})
-			.error(function(err){ console.log(err);	})
-		})
-		.error(function(err){ console.log(err);	});
 	})
 	.error(function(err){ console.log(err);	})
 }
@@ -124,56 +116,112 @@ var removeUserFromGroup = function(userId, groupId, callback){
 
 	UserGroup.find({ where: { user: userId, group: groupId }})
 	.success(function(userGroup){
-
-// console.log(userGroup);
-// res.send(userGroup);
 		if(userGroup === null){
 			callback('Unable to get UserGroup with user ID: ' + userId + ' and groupId: ' + groupId);
 			return;
 		}
-		// userGroup.destroy().success(callback(null))
-// userGroup.destroy().success(function(){console.log('destroy')})
-userGroup.destroy().success(function(){ callback(null); })
+		userGroup.destroy().success(function(){ callback(null); })
 		.error(callback)
 	})
 	.error(callback)
 }
 
-//////test
-router.get('/test', function(req, res) {
-	res.send('foo');
-	setTimeout(function(){ console.log('bar'); }, 3000);
-});
 
+var verifyExistence = function(modelType, id, callback){
+	var Model;
+	switch(modelType){
+		case 'post':
+			Model = Post;
+			break;
+		case 'group':
+			Model = Group;
+			break;
+		default:
+			callback(modelType + ' is not a valid model.');
+			return;
+	}
+	Model.find(id).success(function(instance){
+		if( instance === null ){
+			callback('Could not find instance of ' + modelType + ' with id: ' + id);
+		} else {
+			callback(null, instance);
+		}
+	})
+}
+
+
+// updates model insance vote total
+// vote must be either 0 (upvote) or 1 (downvote)
+// instance should follow convention and have these fields: up, down, total, percentageUp
+var updateVote = function(instance, vote, callback){
+
+	// validate vote
+	if( !(vote === 0 || vote === 1) ){
+		callback('The following is not a valid vote: ' + vote);
+		return;
+	}
+
+	// set up or down vote field
+	var incrementField = 'up';
+	if( vote === 1 ){ var incrementField = 'down'; }
+
+	// increment correct value and adjust percentageUp and total vote
+	instance.increment( incrementField, {by: 1}).success(function(newInstance){ 
+		newInstance.reload().success(function(reloadedInstance){
+			reloadedInstance.percentageUp = calculatePercentageUp(reloadedInstance.up, reloadedInstance.down);
+			reloadedInstance.total = reloadedInstance.up + reloadedInstance.down;
+			reloadedInstance.save()
+			.success(function(finalInstance){ callback(null, finalInstance)})
+			.error(callback);
+		})
+		.error(callback)
+	})
+	.error(callback);
+
+}
+
+// registers group vote for a post (you should verify that user belongs to group)
+// 	(you should also verify that user has not already voted for post)
+// vote must be either 0 or 1 (0 for up, 1 for down)
+var registerPostGroupVote = function(postId, groupId, vote, callback){
+
+	// verify post and group exist
+	verifyExistence('post', postId, function(err, post){
+		if(err){ callback(err); return; }
+		else{
+			verifyExistence('group', groupId, function(err, group){
+				if(err){ callback(err); return; }
+				else{
+
+					// find or create postGroupVote
+					PostGroupVote.findOrCreate({
+						group: groupId,
+						post: postId
+					},{
+						up: 0,
+						down: 0,
+						total: 0,
+						percentageUp: 0.0
+					})
+					.success(function(postGroupVote){
+						updateVote(postGroupVote, vote, callback);
+					})
+					.error(callback)
+				}
+			})
+		}
+	});
+}
 
 /********************************************************************************
 				GROUPS
 ********************************************************************************/
 
-var logError = function(err, res){ if( err ){ console.log(err); } }
+// var logError = function(err, res){ if( err ){ console.log(err); } }
+router.get('/api/test/', function(req, res) {
 
-router.get('/api/test/add-group', function(req, res) {
-
-	// Group.create({}).success(function(){
-	// 	res.send('success');
-	// });
-
-	// addUserToGroup(1, 2, logError);
-	// addUserToGroup(1, 3, logError);
-	// addUserToGroup(1, 4, logError);
-	// addUserToGroup(1, 5, logError);
-
-// res.send('foo');
-
-removeUserFromGroup(1, 3, logError);
-// 	if( err ){ 
-// 		console.log(err);
-// 	} else {
-// 		res.send('success');
-// 	}
-// })
-
-res.send('foo');
+	registerPostGroupVote(5, 10, 1, helpers.logError);
+	res.send('foo');
 
 });
 
@@ -306,7 +354,7 @@ userId = 1;
 
 						// update post vote total( postVoteTotal is created automatically when
 						//		a new post is created)
-						updatePostVoteTotal(post.id, mappedVote);
+						updatePostVoteTotal(post.id, mappedVote, helpers.logError);
 
 					})
 					.error(function(e){ helpers.reportHiddenError(e, res); })
