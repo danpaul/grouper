@@ -11,9 +11,13 @@ exports.reportHiddenError = function(error, response){
 	r.send({'error':['An error occured. Please try again.']});
 }
 
+// check login and redirec on error
 exports.checkLogin = function(req, res){
 	if( req.session.loggedIn !== true ){
 		res.redirect(302, '/api/user/login?f=1');
 		return;
 	}
 }
+
+// log error
+exports.logError = function(err, res){ if( err ){ console.log(err); } }

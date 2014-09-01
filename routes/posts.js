@@ -16,8 +16,11 @@ var VOTE_MAP = {
 	down: 1
 };
 
+var Group = models.Group;
 var Post = models.Post;
 var PostVoteTotal = models.PostVoteTotal;
+var User = models.User;
+var UserGroup = models.UserGroup;
 var UserVote = models.UserVote;
 
 
@@ -69,7 +72,7 @@ var updatePostVoteTotal = function(postId, mappedVote){
 
 		postVoteTotal.increment( incrementField, {by: 1}).success(function(pvt){ 
 			pvt.reload().success(function(pvt){
-				pvt.percentageUp = calculatePercentagUp(pvt.up, pvt.down);
+				pvt.percentageUp = calculatePercentageUp(pvt.up, pvt.down);
 				pvt.total = pvt.up + pvt.down;
 				pvt.save().error(function(err){ console.log(err); });
 			})
@@ -81,7 +84,7 @@ var updatePostVoteTotal = function(postId, mappedVote){
 }
 
 
-var calculatePercentagUp = function(upVotes, downVotes){
+var calculatePercentageUp = function(upVotes, downVotes){
 
 	if( downVotes <= 0.0 ){
 		if( upVotes >= 0.0 ){
@@ -94,6 +97,48 @@ var calculatePercentagUp = function(upVotes, downVotes){
 	return(upVotes / (upVotes + downVotes));
 }
 
+var addUserToGroup = function(userId, groupId, callback){
+	// confirm user exists
+	User.find(userId).success(function(user){
+		if( user === null ){
+			callback('Error: this user not found by user ID: ' + userId);
+			return;
+		}
+		// confirm group exists
+		Group.find(groupId).success(function(group){
+			if( group === null ){
+				callback('Error: user with followin ID does not exist: ' + groupId);
+			}
+			// add user to group
+			UserGroup.findOrCreate({user: userId, group: groupId})
+			.success(function(userGroup){ callback(null, userGroup) })
+			.error(callback)
+		})
+		.error(callback)
+	})
+	.error(callback)
+}
+
+
+var removeUserFromGroup = function(userId, groupId, callback){
+
+	UserGroup.find({ where: { user: userId, group: groupId }})
+	.success(function(userGroup){
+
+// console.log(userGroup);
+// res.send(userGroup);
+		if(userGroup === null){
+			callback('Unable to get UserGroup with user ID: ' + userId + ' and groupId: ' + groupId);
+			return;
+		}
+		// userGroup.destroy().success(callback(null))
+// userGroup.destroy().success(function(){console.log('destroy')})
+userGroup.destroy().success(function(){ callback(null); })
+		.error(callback)
+	})
+	.error(callback)
+}
+
 //////test
 router.get('/test', function(req, res) {
 	res.send('foo');
@@ -101,7 +146,36 @@ router.get('/test', function(req, res) {
 });
 
 
+/********************************************************************************
+				GROUPS
+********************************************************************************/
 
+var logError = function(err, res){ if( err ){ console.log(err); } }
+
+router.get('/api/test/add-group', function(req, res) {
+
+	// Group.create({}).success(function(){
+	// 	res.send('success');
+	// });
+
+	// addUserToGroup(1, 2, logError);
+	// addUserToGroup(1, 3, logError);
+	// addUserToGroup(1, 4, logError);
+	// addUserToGroup(1, 5, logError);
+
+// res.send('foo');
+
+removeUserFromGroup(1, 3, logError);
+// 	if( err ){ 
+// 		console.log(err);
+// 	} else {
+// 		res.send('success');
+// 	}
+// })
+
+res.send('foo');
+
+});
 
 /********************************************************************************
 				POSTS
@@ -162,10 +236,11 @@ router.get('/api/posts/all', function(req, res) {
 		.error(helpers.reportGenericError);
 });
 
+
+
 /********************************************************************************
 				VOTES
 ********************************************************************************/
-
 
 router.post('/api/post/vote', function(req, res) {
 
