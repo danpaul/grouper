@@ -2,20 +2,18 @@
 
 
 To start: npm start
-start nodemon: nodemon ./bin/www
+To start nodemon: nodemon ./bin/www
 
 Sequlizer DB sync issue: in development, delete DB, uncomment app.sequelize sync
     block. start app. comment out app.sequelize sync block, restart
 
         - see documentation use sequelize.drop() and sequelize.sync({force: true}) instead
             + (at bottom of models.js)
-
-
 */
 
 
 //  nodemon bin/www
-
+ 
 var express = require('express');
 var path = require('path');
 var favicon = require('static-favicon');

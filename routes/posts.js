@@ -24,11 +24,9 @@ var User = models.User;
 var UserGroup = models.UserGroup;
 var UserVote = models.UserVote;
 
-
 /********************************************************************************
 			FUNCTIONS
 ********************************************************************************/
-
 
 // creates a new record for a post and calls callback of form
 //		callback(error) on completions
@@ -266,18 +264,60 @@ var updateUserGroupAgreement = function(userId, groupId, postGroupVote, userVote
 }
 
 /********************************************************************************
+				TESTING SHIZ
+********************************************************************************/
+
+var seed = function(callback){
+
+	var userId = 1;
+	var numberOfGroups = 10;
+	var callsMade = 0;
+
+	// create groups
+	for(i = 0; i < numberOfGroups; i++ ){
+		
+		Group.create()
+			.success(function(){
+				if(callsMade === numberOfGroups - 1){
+
+					callback(null, true);
+				}else{
+					callsMade++;
+				}
+			})
+			.error(function(){
+				callback('Unable to create group', null);
+			});
+		
+	}
+
+	
+
+}
+
+var test = function(){
+
+}
+
+test();
+
+/********************************************************************************
 				GROUPS
 ********************************************************************************/
 
 // var logError = function(err, res){ if( err ){ console.log(err); } }
 router.get('/api/test/', function(req, res) {
 
-	var userId = 1;
+	seed(function(err, response){
+		if( err ){
+			console.log(err);
+			res.send(err);
+		}else{
+			res.send('success');
+		}		
+	});
 
-	// create a bunch of posts
-
-	// registerPostGroupVote(5, 10, 1, helpers.logError);
-	res.send('foo');
+	// res.send('foo');
 
 });
 
@@ -415,7 +455,6 @@ userId = 1;
 					})
 					.error(function(e){ helpers.reportHiddenError(e, res); })
 					//update group votes
-
 					
 					return;
 				})

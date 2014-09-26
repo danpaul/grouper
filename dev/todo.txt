@@ -1,3 +1,5 @@
+- setup test and seed scripts
+
 - NEED TO TEST update user group agreement
 
 - start implementing testing
