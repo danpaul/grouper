@@ -91,10 +91,22 @@ module.exports.models = function(){
 			references: models.Post,
 			referencesKey: "id"
 		},
-		up: Sequelize.INTEGER,
-		down: Sequelize.INTEGER,
-		total: Sequelize.INTEGER,
-		percentageUp: Sequelize.FLOAT
+		up: {
+			type: Sequelize.INTEGER,
+			defaultValue: 0,
+		},
+		down: {
+			type: Sequelize.INTEGER,
+			defaultValue: 0
+		},
+		total: {
+			type: Sequelize.INTEGER,
+			defaultValue: 0
+		},
+		percentageUp: {
+			type: Sequelize.FLOAT,
+			defaultValue: 0.0
+		}
 	});
 
 	models.PostGroupVote = sequelize.define('PostGroupVote', {
@@ -131,7 +143,22 @@ module.exports.models = function(){
 		percentageUp: Sequelize.FLOAT
 	});
 
-// sequelize.sync();
+	// models.Group.hasMany(models.User);
+	// models.User.hasMany(models.Group, {'through': 'UserGroups'});
+
+
+
+// rename userGroup to GroupUser and set index fields (so no need from through:
+// Error: ER_BAD_FIELD_ERROR: Unknown column 'UserGroups.UserId' in 'field list'
+// sequelize auto creates this table
+
+	// models.Group.hasMany(models.User, {'through': 'UserGroups'});
+	// models.User.hasMany(models.Group, {'through': 'UserGroups'});
+
+	models.Group.hasMany(models.User);
+	models.User.hasMany(models.Group);
+
+sequelize.sync();
 
 	return models;
 }

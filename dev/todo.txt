@@ -1,3 +1,11 @@
+- add indexes
+    + percentages
+    + totals
+    + user.username
+    + UserVote.user  UserVote.post
+
+
+
 - setup test and seed scripts
 
 - NEED TO TEST update user group agreement
@@ -16,10 +24,7 @@
 
 - parse urls and add http if ommited
 
-- add indexes
-	+ percentages
-	+ totals
-	+ user.username
+
 
 - on delete cascade for foreign keys
 

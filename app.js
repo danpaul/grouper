@@ -4,11 +4,14 @@
 To start: npm start
 To start nodemon: nodemon ./bin/www
 
-Sequlizer DB sync issue: in development, delete DB, uncomment app.sequelize sync
+[INGORE THIS]Sequlizer DB sync issue: in development, delete DB, uncomment app.sequelize sync
     block. start app. comment out app.sequelize sync block, restart
 
         - see documentation use sequelize.drop() and sequelize.sync({force: true}) instead
             + (at bottom of models.js)
+
+INIT DB: manutally create gruoper DB, uncommonent sync line at bottom of models.js file
+
 */
 
 
@@ -59,7 +62,11 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 app.use(cookieParser('2djFjH$i@c$M0lcOMnr0Z!3s'));
-app.use(expressSession({secret: '0ZY2arQLI5kqnEcK0p1rXBmX'}));
+app.use(expressSession({
+    secret: '0ZY2arQLI5kqnEcK0p1rXBmX',
+    resave: true,
+    saveUninitialized: true
+}));
 
 app.use(favicon());
 app.use(logger('dev'));
