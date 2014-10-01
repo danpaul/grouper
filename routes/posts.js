@@ -27,7 +27,7 @@ var Post = models.Post;
 var PostGroupVote = models.PostGroupVote;
 var PostVoteTotal = models.PostVoteTotal;
 var User = models.User;
-var UserGroup = models.UserGroup;
+var GroupsUsers = models.GroupsUsers;
 var UserVote = models.UserVote;
 
 
@@ -157,11 +157,20 @@ var addUserToGroup = function(userId, groupId, callback){
         // confirm group exists
         Group.find(groupId).success(function(group){
             if( group === null ){
-                callback('Error: user with followin ID does not exist: ' + groupId);
+                callback('Error: group with following ID does not exist: ' + groupId);
             }
+
+user.addGroup(group);
+
+// GroupsUsers.create({userId: userId, groupId: groupId});
+
+console.log(groupId);
             // add user to group
-            UserGroup.findOrCreate({user: userId, group: groupId})
-            .success(function(userGroup){ callback(null, userGroup) })
+            // GroupsUsers.findOrCreate({user: userId, group: groupId})
+			GroupsUsers.findOrCreate({userId: userId, groupId: groupId})
+            .success(function(GroupsUsers){
+console.log(GroupsUsers);
+             callback(null, GroupsUsers) })
             .error(callback)
         })
         .error(callback)
@@ -171,13 +180,14 @@ var addUserToGroup = function(userId, groupId, callback){
 
 var removeUserFromGroup = function(userId, groupId, callback){
 
-    UserGroup.find({ where: { user: userId, group: groupId }})
-    .success(function(userGroup){
-        if(userGroup === null){
+//asdf
+    GroupsUsers.find({ where: { user: userId, group: groupId }})
+    .success(function(GroupsUsers){
+        if(GroupsUsers === null){
             callback('Unable to get UserGroup with user ID: ' + userId + ' and groupId: ' + groupId);
             return;
         }
-        userGroup.destroy().success(function(){ callback(null); })
+        GroupsUsers.destroy().success(function(){ callback(null); })
         .error(callback)
     })
     .error(callback)
@@ -517,16 +527,22 @@ var test = function(){
     //     else{ console.log(r); }
     // })
 
-User.find(1)
-    .success(function(user){
-        user.getGroups()
-//         .success(groups){
-// console.log(groups);
-//         }
 
-// console.log(user.getgroup);
-        // user.group
-    });
+
+	// seed(function(){
+
+		User.find(2)
+		    .success(function(user){
+		        user.getGroups()
+		        .success(function(groups){
+					console.log(groups);
+		        });
+		    });
+
+	// });
+
+// var addUserToGroup = function(userId, groupId, callback){
+// addUserToGroup(2, 3, function(){ console.log('done')});
 
 }
 

@@ -72,7 +72,7 @@ module.exports.models = function(){
 
 	models.Group = sequelize.define('Group', { });
 
-	models.UserGroup = sequelize.define('UserGroup', {
+	models.GroupsUsers = sequelize.define('GroupsUsers', {
 		user: {
 			type: Sequelize.INTEGER,
 		  	references: models.User,
@@ -82,7 +82,7 @@ module.exports.models = function(){
 			type: Sequelize.INTEGER,
 			references: models.Group,
 			referencesKey: "id"
-		}	  
+		}
 	});
 
 	models.PostVoteTotal = sequelize.define('PostVoteTotal', {
@@ -154,6 +154,10 @@ module.exports.models = function(){
 
 	// models.Group.hasMany(models.User, {'through': 'UserGroups'});
 	// models.User.hasMany(models.Group, {'through': 'UserGroups'});
+
+/*******************************************************************************
+ASSOCIATIONS
+*******************************************************************************/
 
 	models.Group.hasMany(models.User);
 	models.User.hasMany(models.Group);
