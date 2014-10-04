@@ -1,3 +1,5 @@
+- optimize removeUserFromGroup function
+
 - add indexes
     + percentages
     + totals

@@ -42,7 +42,7 @@ var app = express();
 
 // app.models = require('./models.js').models(app.sequelize);
 
-app.models = require('./models.js').models();
+// app.models = require('./models.js').models();
 
 // app.sequelize
 //     .sync({ force: true })

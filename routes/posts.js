@@ -4,12 +4,7 @@ var router = express.Router();
 var models = require('../models.js').models();
 
 var helpers = require('../inc/helpers.js');
-
-
-
 var async = require('async');
-
-
 
 /********************************************************************************
                 CONSTANTS / DATA
@@ -27,7 +22,7 @@ var Post = models.Post;
 var PostGroupVote = models.PostGroupVote;
 var PostVoteTotal = models.PostVoteTotal;
 var User = models.User;
-var GroupsUsers = models.GroupsUsers;
+// var GroupsUsers = models.GroupsUsers;
 var UserVote = models.UserVote;
 
 
@@ -90,7 +85,7 @@ var castUserVote = function(userId, postId, vote, callback){
         .error(callback)
 }
 
-var updateGroupVotes = function(userId, callback){
+var updateGroupVotes = function(userVote, callback){
     // find groups user belongs to
     // UserGroups.find({where: {user: userId}})
     // .success(function(userGroups){
@@ -147,7 +142,10 @@ var updateGroupVotes = function(userId, callback){
             GROUP FUNCTIONS
 ********************************************************************************/
 
+
+
 var addUserToGroup = function(userId, groupId, callback){
+
     // confirm user exists
     User.find(userId).success(function(user){
         if( user === null ){
@@ -160,18 +158,9 @@ var addUserToGroup = function(userId, groupId, callback){
                 callback('Error: group with following ID does not exist: ' + groupId);
             }
 
-user.addGroup(group);
-
-// GroupsUsers.create({userId: userId, groupId: groupId});
-
-console.log(groupId);
-            // add user to group
-            // GroupsUsers.findOrCreate({user: userId, group: groupId})
-			GroupsUsers.findOrCreate({userId: userId, groupId: groupId})
-            .success(function(GroupsUsers){
-console.log(GroupsUsers);
-             callback(null, GroupsUsers) })
-            .error(callback)
+            // add user
+			user.addGroup(group).success(callback)
+			.error(callback)
         })
         .error(callback)
     })
@@ -180,17 +169,25 @@ console.log(GroupsUsers);
 
 var removeUserFromGroup = function(userId, groupId, callback){
 
-//asdf
-    GroupsUsers.find({ where: { user: userId, group: groupId }})
-    .success(function(GroupsUsers){
-        if(GroupsUsers === null){
-            callback('Unable to get UserGroup with user ID: ' + userId + ' and groupId: ' + groupId);
-            return;
-        }
-        GroupsUsers.destroy().success(function(){ callback(null); })
-        .error(callback)
-    })
-    .error(callback)
+	User.find(userId).success(function(user){
+		Group.find(groupId).success(function(group){
+			user.removeGroup(group).success(callback)
+			.error(callback)
+		})
+		.error(callback)	
+	})
+	.error(callback)
+
+    // GroupsUsers.find({ where: { userId: userId, groupId: groupId }})
+    // .success(function(GroupsUsers){
+    //     if(GroupsUsers === null){
+    //         callback('Unable to get UserGroup with user ID: ' + userId + ' and groupId: ' + groupId);
+    //     } else {
+	   //      GroupsUsers.destroy().success(function(){ callback(null); })
+	   //      .error(callback)
+    //     }
+    // })
+    // .error(callback)
 }
 
 
@@ -513,7 +510,6 @@ var seed = function(callback){
                 }
             );
 
-console.log('next');
         }
 
     ]);
@@ -521,28 +517,9 @@ console.log('next');
 }
 
 var test = function(){
-    // console.log('foo');
-    // seed(function(err, r){
-    //     if(err){ console.log(err) }
-    //     else{ console.log(r); }
-    // })
 
-
-
-	// seed(function(){
-
-		User.find(2)
-		    .success(function(user){
-		        user.getGroups()
-		        .success(function(groups){
-					console.log(groups);
-		        });
-		    });
-
-	// });
-
-// var addUserToGroup = function(userId, groupId, callback){
-// addUserToGroup(2, 3, function(){ console.log('done')});
+	addUserToGroup(2, 3, function(){ console.log('done')});
+	removeUserFromGroup(2,3,function(){});
 
 }
 

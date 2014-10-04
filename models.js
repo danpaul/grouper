@@ -72,18 +72,18 @@ module.exports.models = function(){
 
 	models.Group = sequelize.define('Group', { });
 
-	models.GroupsUsers = sequelize.define('GroupsUsers', {
-		user: {
-			type: Sequelize.INTEGER,
-		  	references: models.User,
-		  	referencesKey: "id"
-		},
-		group: {
-			type: Sequelize.INTEGER,
-			references: models.Group,
-			referencesKey: "id"
-		}
-	});
+	// models.GroupsUsers = sequelize.define('GroupsUsers', {
+	// 	userId: {
+	// 		type: Sequelize.INTEGER,
+	// 	  	references: models.User,
+	// 	  	referencesKey: "id"
+	// 	},
+	// 	groupId: {
+	// 		type: Sequelize.INTEGER,
+	// 		references: models.Group,
+	// 		referencesKey: "id"
+	// 	}
+	// });
 
 	models.PostVoteTotal = sequelize.define('PostVoteTotal', {
 		post: {
@@ -162,7 +162,9 @@ ASSOCIATIONS
 	models.Group.hasMany(models.User);
 	models.User.hasMany(models.Group);
 
-sequelize.sync();
+console.log('foo');
+
+// sequelize.sync();
 
 	return models;
 }
