@@ -36,12 +36,16 @@ var UserVote = models.UserVote;
 var castUserVote = function(user, post, vote, callback){
 
     // confirm user has not yet voted for post
-    UserVote.find({
+    UserVote.find({ where: {
         user: user.id,
         post: post.id
-    })
+    }})
 
     .success(function(userVote){
+
+// console.log(user.id);
+// console.log(post.id);
+// console.log(userVote == null);
 
         // if uservote already exists, return and don't do anything else
         if( userVote !== null ){ callback(); return; }
@@ -327,6 +331,8 @@ var seed = function(callback){
     var posts = [];
     var groups = [];
 
+    console.log('seeding started');
+
     async.series([
 
         // create groups
@@ -350,7 +356,9 @@ var seed = function(callback){
 
                 function (err) {
                     if( err ){ callback(err); }
-                    else{ callback(); }
+                    else{ 
+                        console.log('groups created');
+                        callback(); }
                 }
             );
 
@@ -383,7 +391,10 @@ var seed = function(callback){
 
                 function (e) {
                     if( e ){ console.log(e); callback(e); }
-                    else{ callback(); }
+                    else{
+                        console.log('users created');
+                        callback();
+                    }
                 }
             );
 
@@ -415,7 +426,10 @@ var seed = function(callback){
 
                 function (e) {
                     if( e ){ console.log(e); callback(e); }
-                    else{ callback(); }
+                    else{
+                        console.log('posts created');
+                        callback();
+                    }
                 }
             );
 
@@ -434,7 +448,10 @@ var seed = function(callback){
                 })
             }, function(e){
                 if(e){ console.log(e); callback(e); }
-                else{ callback(); }
+                else{
+                    console.log('users added to groups');
+                    callback();
+                }
             })
         },
 
@@ -455,11 +472,11 @@ var seed = function(callback){
 
                             // users likes post
                             if( (user.id % 2) == (post.id % 2) ){
-                                castUserVote(user, post.id, UPVOTE, callback_c);
+                                castUserVote(user, post, UPVOTE, callback_c);
 
                             // user does not like post
                             } else {
-                                castUserVote(user, post.id, DOWNVOTE, callback_c);
+                                castUserVote(user, post, DOWNVOTE, callback_c);
                             }
                         },
                         function(e){   
@@ -475,6 +492,12 @@ var seed = function(callback){
                 }
             );
 
+        },
+
+        function(callback){
+            console.log('user votes cast');
+            console.log('finished seeding');
+            callback();
         }
 
     ]);
