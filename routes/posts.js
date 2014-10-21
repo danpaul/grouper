@@ -1,3 +1,9 @@
+// check post group votes
+
+
+
+
+
 var express = require('express');
 var router = express.Router();
 
@@ -16,14 +22,14 @@ var VOTE_MAP = {
     up: 0,
     down: 1
 };
-var ASYN_CONCURRENCY_LIMIT = 10;
+var ASYNC_CONCURRENCY_LIMIT = 1;
 
 var Group = models.Group;
 var Post = models.Post;
 var PostGroupVote = models.PostGroupVote;
 var PostVoteTotal = models.PostVoteTotal;
 var User = models.User;
-// var GroupsUsers = models.GroupsUsers;
+var UserGroupAgreement = models.UserGroupAgreement;
 var UserVote = models.UserVote;
 
 
@@ -42,10 +48,6 @@ var castUserVote = function(user, post, vote, callback){
     }})
 
     .success(function(userVote){
-
-// console.log(user.id);
-// console.log(post.id);
-// console.log(userVote == null);
 
         // if uservote already exists, return and don't do anything else
         if( userVote !== null ){ callback(); return; }
@@ -78,8 +80,9 @@ var castUserVote = function(user, post, vote, callback){
 
 var updateGroupVotes = function(user, postId, vote, callback){
     user.getGroups().success(function(groups){
-        async.eachLimit(groups, ASYN_CONCURRENCY_LIMIT, function(group, callback_b){
-            registerPostGroupVote(postId, group.id, vote, callback_b);
+        // async.eachLimit(groups, ASYNC_CONCURRENCY_LIMIT, function(group, callback_b){
+        async.eachSeries(groups, function(group, callback_b){
+            registerPostGroupVote(user.id, postId, group.id, vote, callback_b);
         }, function(e){
             if(e){ callback(e); } else { callback(); }
         })
@@ -87,78 +90,9 @@ var updateGroupVotes = function(user, postId, vote, callback){
     .error(callback)
 }
 
-
-// creates a new record for a post and calls callback of form
-//      callback(error) on completions
-// var createPostVoteTotal = function(postVoteTotal, postId, callback){
-
-//     // create row for totals
-//     postVoteTotal = postVoteTotal.create({
-//         post: postId,
-//         up: 0,
-//         down: 0,
-//         total: 0,
-//         percentageUp: 0.0
-//     })
-
-//     // if success, callback without error
-//     .success(function(){
-//         callback(false);
-//     })
-
-//     // if error, callback with error
-//     .error(function(error) {
-//         callback(error);
-//     })
-// }
-
-
-// updates vote for postVoteTotal
-// vote is either 0 or 1
-// var updatePostVoteTotal = function(postId, vote, callback){
-
-//     // find post vote total
-//     PostVoteTotal.find({where: {post: postId}})
-//     .success(function(postVoteTotal){
-
-//         // confirm valid record is returned
-//         if(postVoteTotal === null){
-//             callback('Unable to retrieve post: ' + postId);
-//             return;
-//         }
-
-//         updateVote(postVoteTotal, vote, callback);
-
-//     })
-//     .error(function(err){ console.log(err); })
-// }
-
 /********************************************************************************
             GROUP FUNCTIONS
 ********************************************************************************/
-
-
-// var addUserToGroup = function(userId, groupId, callback){
-
-//     // confirm user exists
-//     User.find(userId).success(function(user){
-//         if( user === null ){
-//             callback('Error: this user not found by user ID: ' + userId);
-//             return;
-//         }
-//         // confirm group exists
-//         Group.find(groupId).success(function(group){
-//             if( group === null ){
-//                 callback('Error: group with following ID does not exist: ' + groupId);
-//             }
-//             // add user
-//             user.addGroup(group).success(callback)
-//             .error(callback)
-//         })
-//         .error(callback)
-//     })
-//     .error(callback)
-// }
 
 var removeUserFromGroup = function(userId, groupId, callback){
 
@@ -213,68 +147,54 @@ var updateVote = function(instance, vote, callback){
 // registers group vote for a post (you should verify that user belongs to group)
 //  (you should also verify that user has not already voted for post)
 // vote must be either 0 or 1 (0 for up, 1 for down)
-var registerPostGroupVote = function(postId, groupId, vote, callback){
+var registerPostGroupVote = function(userId, postId, groupId, vote, callback){
     // find or create postGroupVote
     PostGroupVote.findOrCreate({
         groupId: groupId,
         postId: postId
     // update vote
     }).success(function(postGroupVote){
-        updateVote(postGroupVote, vote, callback);
+        // updateVote(postGroupVote, vote, callback);
+        updateVote(postGroupVote, vote, function(err, updatePostGroupVote){
+            if(err){ callback(err); }
+            else{
+                updateUserGroupAgreement(userId, groupId, updatePostGroupVote, vote, callback);
+            }
+        });
     })
     .error(callback)
 }
 
-// updates user group agreement table (table that shows how often given user
-//      agrees with group)
-// postGroupVote should be an instance
+
 var updateUserGroupAgreement = function(userId, groupId, postGroupVote, userVote, callback){
-    // verify user and group exist
-    verifyExistence('user', userId, function(err, post){
-        if(err){ callback(err); return; }
-        else{
-            verifyExistence('group', groupId, function(err, group){
-                if(err){ callback(err); return; }
-                else{
-                    // find or create UserGroupAgreement
-                    UserGroupAgreement.findOrCreate({
-                        group: groupId,
-                        user: userId
-                    },{
-// add defaults to model
-                        agree: 0,
-                        disagree: 0,
-                        agreePercentage: 0.0
-                    })
-                    // update vote
-                    .success(function(userGroupAgreement){
 
-                        // if 1 or no votes have been made for post, or if votes are split, do nothing
-                        if( postGroupVote.total <= 1 || postGroupVote.percentageUp == 0.5 ){
-                            callback(null, userGroupAgreement);
-                            return;
-                        }
+    // find or create UserGroupAgreement
+    UserGroupAgreement.findOrCreate({
+        group: groupId,
+        user: userId
+    })
+    // update vote
+    .success(function(userGroupAgreement){
 
-                        var vote;
-                        // determine if user is in agreement
-                        if( (userVote === UPVOTE && postGroupVote.percentageUp > 0.5) ||
-                            (userVote === DOWNVOTE && postGroupVote.percentageUp < 0.5) )
-                        {
-                            // user agrees, gets an upvote
-                            vote = UPVOTE;
-                        } else {
-                            // user disagrees, gets a downvote
-                            vote = DOWNVOTE;
-                        }
+        // if 1 or no votes have been made for post, or if votes are split, do nothing
+        if( postGroupVote.total <= 1 || postGroupVote.percentageUp == 0.5 ){
+            callback();
+        } else {
+            // determine if user is in agreement
+            if( (userVote === UPVOTE && postGroupVote.percentageUp > 0.5) ||
+                (userVote === DOWNVOTE && postGroupVote.percentageUp < 0.5) )
+            {
+                // user agrees, gets an upvote
+                var vote = UPVOTE;
+            } else {
+                // user disagrees, gets a downvote
+                var vote = DOWNVOTE;
+            }
 
-                        updateVote(userGroupAgreement, vote, callback);
-
-                    })
-                    .error(callback)
-                }
-            })
+            updateVote(userGroupAgreement, vote, callback);
         }
     })
+    .error(callback)
 }
 
 // calculates percentage of upvotes (avoids divide by zero)
@@ -287,38 +207,8 @@ var calculatePercentageUp = function(upVotes, downVotes){
     return(upVotes / (upVotes + downVotes));
 }
 
-// checks that record of type `modelType` with id exists
-// if `modelType` is an array, `id` must also be an array and 
-//  each will be verified
-var verifyExistence = function(modelType, id, callback){
-
-    var Model;
-    switch(modelType){
-        case 'group':
-            Model = Group;
-            break;
-        case 'post':
-            Model = Post;
-            break;
-        case 'user':
-            Model = User;
-            break;
-        default:
-            callback(modelType + ' is not a valid model.');
-            return;
-    }
-    Model.find(id).success(function(instance){
-        if( instance === null ){
-            callback('Could not find instance of ' + modelType + ' with id: ' + id);
-        } else {
-            callback(null, instance);
-        }
-    })
-}
-
-
 /********************************************************************************
-                TESTING SHIZ / SEEDING
+                TESTING / SEEDING
 ********************************************************************************/
 
 var seed = function(callback){
@@ -468,16 +358,29 @@ var seed = function(callback){
                     async.eachLimit(
                         posts,
                         10,
-                        function(post, callback_c){                            
+                        function(post, callback_c){
 
-                            // users likes post
-                            if( (user.id % 2) == (post.id % 2) ){
-                                castUserVote(user, post, UPVOTE, callback_c);
+                            // cast a random voate 1/5 times
+                            if( Math.random() < 0.2 ){
+                                if( Math.random < 0.5 ){
+                                    castUserVote(user, post, UPVOTE, callback_c);
+                                } else {
+                                    castUserVote(user, post, DOWNVOTE, callback_c);
+                                }
 
-                            // user does not like post
                             } else {
-                                castUserVote(user, post, DOWNVOTE, callback_c);
+
+                                // users likes post
+                                if( (user.id % 2) == (post.id % 2) ){
+                                    castUserVote(user, post, UPVOTE, callback_c);
+
+                                // user does not like post
+                                } else {
+                                    castUserVote(user, post, DOWNVOTE, callback_c);
+                                }
+
                             }
+
                         },
                         function(e){   
                             if(e){ console.log(e); callback_c(e); }
@@ -508,32 +411,9 @@ var test = function(){
 
     seed();
 
-    // addUserToGroup(2, 3, function(){ console.log('done')});
-    // removeUserFromGroup(2,3,function(){});
-
 }
 
 test();
-
-/********************************************************************************
-                GROUPS
-********************************************************************************/
-
-// var logError = function(err, res){ if( err ){ console.log(err); } }
-router.get('/api/test/', function(req, res) {
-
-    seed(function(err, response){
-        if( err ){
-            console.log(err);
-            res.send(err);
-        }else{
-            res.send('success');
-        }       
-    });
-
-    // res.send('foo');
-
-});
 
 /********************************************************************************
                 POSTS

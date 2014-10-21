@@ -1,3 +1,5 @@
+- confirm seeding is working correctly
+
 - optimize removeUserFromGroup function
 
 - add indexes
@@ -5,6 +7,7 @@
     + totals
     + user.username
     + UserVote.user  UserVote.post
+    + userGroupAgreements user id group id
 
 
 

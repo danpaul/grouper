@@ -139,6 +139,22 @@ module.exports.models = function(){
         }
     });
 
+
+
+
+// UserGroupAgreement.findOrCreate({
+//     group: groupId,
+//     user: userId
+// },{
+// // add defaults to model
+//     agree: 0,
+//     disagree: 0,
+//     agreePercentage: 0.0
+
+
+
+
+
     models.UserGroupAgreement = sequelize.define('UserGroupAgreement', {
         user: {
             type: Sequelize.INTEGER,
@@ -150,10 +166,22 @@ module.exports.models = function(){
             references: models.Group,
             referencesKey: "id"
         },
-        up: Sequelize.INTEGER,
-        down: Sequelize.INTEGER,
-        total: Sequelize.INTEGER,
-        percentageUp: Sequelize.FLOAT
+        up: {
+            type: Sequelize.INTEGER,
+            defaultValue: 0
+        },
+        down: {
+            type: Sequelize.INTEGER,
+            defaultValue: 0
+        },
+        total: {
+            type: Sequelize.INTEGER,
+            defaultValue: 0
+        },
+        percentageUp: {
+            type: Sequelize.FLOAT,
+            defaultValue: 0.0
+        }
     });
 
     // models.Group.hasMany(models.User);
