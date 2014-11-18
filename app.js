@@ -14,9 +14,6 @@ INIT DB: manutally create gruoper DB, uncommonent sync line at bottom of models.
 
 */
 
-
-//  nodemon bin/www
- 
 var express = require('express');
 var path = require('path');
 var favicon = require('static-favicon');

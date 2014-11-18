@@ -1,13 +1,23 @@
+- post vote totals should just be part of post
+
+- all functions with find or create should have a "retry" function
+
+- create unique requirements on compound indexes
+
 - confirm seeding is working correctly
 
 - optimize removeUserFromGroup function
 
 - add indexes
-    + percentages
+	+ confirm which should be compound
+    + percentages    
     + totals
     + user.username
     + UserVote.user  UserVote.post
     + userGroupAgreements user id group id
+
+
+
 
 
 
@@ -18,6 +28,14 @@
 - start implementing testing
 
 - start implementing sort script
+
+- review and minimize sql fields - do all need created/updated?
+
+- confirm select are only returning desired fields
+
+- UserGroupAgreements, UserVotes don't need an id field
+
+- ensure unique indexes are set and retrys exist for each function
 
 
 
@@ -40,6 +58,7 @@
 
 Deploy:
 	- remove auto update from schema.js
+	- uncomment the init flag at the top of the models.js file (this is BAD)
 	- create cluster if on multi-core
 	- set error handeling in app.js
 	- update db creds

@@ -1,9 +1,5 @@
 // check post group votes
 
-
-
-
-
 var express = require('express');
 var router = express.Router();
 
@@ -79,6 +75,10 @@ var castUserVote = function(user, post, vote, callback){
 }
 
 var updateGroupVotes = function(user, postId, vote, callback){
+
+// console.log(user.id);
+
+
     user.getGroups().success(function(groups){
         // async.eachLimit(groups, ASYNC_CONCURRENCY_LIMIT, function(group, callback_b){
         async.eachSeries(groups, function(group, callback_b){
@@ -148,6 +148,10 @@ var updateVote = function(instance, vote, callback){
 //  (you should also verify that user has not already voted for post)
 // vote must be either 0 or 1 (0 for up, 1 for down)
 var registerPostGroupVote = function(userId, postId, groupId, vote, callback){
+
+// console.log(userId);
+////FIX !!!!
+
     // find or create postGroupVote
     PostGroupVote.findOrCreate({
         groupId: groupId,
@@ -166,20 +170,80 @@ var registerPostGroupVote = function(userId, postId, groupId, vote, callback){
 }
 
 
-var updateUserGroupAgreement = function(userId, groupId, postGroupVote, userVote, callback){
 
-    // find or create UserGroupAgreement
-    UserGroupAgreement.findOrCreate({
-        group: groupId,
-        user: userId
+
+
+
+var updateUserGroupAgreement = function(
+                                userId,
+                                groupId,
+                                postGroupVote,
+                                userVote,
+                                callback,
+                                isNotFirstCall){
+
+// console.log(userId);
+
+
+
+
+
+
+
+
+
+if( userId !== 1 && userId !== 1 ){  
+
+console.log(userId);
+
+    UserGroupAgreement.findOrCreate(
+        {group: groupId,
+        user: userId}
+    )
+
+    .success(function(i){
+
+// console.log(i);
+
+        callback();
     })
-    // update vote
-    .success(function(userGroupAgreement){
 
+    .error(function(){callback()})
+
+
+} else {
+    callback();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    UserGroupAgreement.findOrCreate(
+        {group: groupId},
+        {user: userId}
+    )
+
+    // update vote
+    .success(function(userGroupAgreement, created){
+
+// if( created === true ){ console.log(userId); }
+
+
+// console.log(created);
         // if 1 or no votes have been made for post, or if votes are split, do nothing
-        if( postGroupVote.total <= 1 || postGroupVote.percentageUp == 0.5 ){
-            callback();
-        } else {
+        // if( postGroupVote.total <= 1 || postGroupVote.percentageUp == 0.5 ){
+        //     callback();
+        // } else {
             // determine if user is in agreement
             if( (userVote === UPVOTE && postGroupVote.percentageUp > 0.5) ||
                 (userVote === DOWNVOTE && postGroupVote.percentageUp < 0.5) )
@@ -192,9 +256,24 @@ var updateUserGroupAgreement = function(userId, groupId, postGroupVote, userVote
             }
 
             updateVote(userGroupAgreement, vote, callback);
-        }
+        // }
     })
-    .error(callback)
+    .error(
+        // retry once in case record was inserted before writing
+        function(e){
+            if( typeof(isNotFirstCall) === 'undefined' ){
+                updateUserGroupAgreement(
+                                userId,
+                                groupId,
+                                postGroupVote,
+                                userVote,
+                                callback,
+                                true);
+            }else{
+                callback(e);
+            }
+        }
+    )
 }
 
 // calculates percentage of upvotes (avoids divide by zero)
@@ -213,8 +292,8 @@ var calculatePercentageUp = function(upVotes, downVotes){
 
 var seed = function(callback){
 
-    var numberOfGroups = 10;
-    var numberOfPosts = 100;
+    var numberOfGroups = 4;
+    var numberOfPosts = 10;
     var numberOfUsers = 10;
 
     var users = [];
@@ -353,16 +432,14 @@ var seed = function(callback){
                 users,
                 function(user, callback_b){
 
-// console.log(user.id);
-
                     async.eachLimit(
                         posts,
                         10,
                         function(post, callback_c){
 
-                            // cast a random voate 1/5 times
+                            // cast a random vote 1/5 times
                             if( Math.random() < 0.2 ){
-                                if( Math.random < 0.5 ){
+                                if( Math.random() < 0.5 ){
                                     castUserVote(user, post, UPVOTE, callback_c);
                                 } else {
                                     castUserVote(user, post, DOWNVOTE, callback_c);
@@ -378,12 +455,10 @@ var seed = function(callback){
                                 } else {
                                     castUserVote(user, post, DOWNVOTE, callback_c);
                                 }
-
                             }
-
                         },
                         function(e){   
-                            if(e){ console.log(e); callback_c(e); }
+                            if(e){ console.log(e); callback_b(e); }
                             else{ callback_b(); }
                         }
                     );
@@ -394,7 +469,6 @@ var seed = function(callback){
                     else{ callback(); }
                 }
             );
-
         },
 
         function(callback){
@@ -407,18 +481,20 @@ var seed = function(callback){
 
 }
 
-var test = function(){
+seed();
 
-    seed();
+// UserGroupAgreement.findOrCreate(
+//     {group: 666},
+//     {user: 222}
+// )
 
-}
-
-test();
+// .success(function(){
+//     console.log('yay');
+// })
 
 /********************************************************************************
                 POSTS
 ********************************************************************************/
-
 
 // new post get request
 router.get('/api/post/new', function(req, res) {
@@ -492,7 +568,7 @@ router.post('/api/post/vote', function(req, res) {
 
 
 
-userId = 1;
+userId = 2;
 
 
 

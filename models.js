@@ -1,3 +1,5 @@
+var initializing = false;
+
 var Sequelize = require('sequelize');
 
 var sequelize = new Sequelize('grouper', 'root', 'root', {
@@ -142,29 +144,19 @@ module.exports.models = function(){
 
 
 
-// UserGroupAgreement.findOrCreate({
-//     group: groupId,
-//     user: userId
-// },{
-// // add defaults to model
-//     agree: 0,
-//     disagree: 0,
-//     agreePercentage: 0.0
-
-
-
-
 
     models.UserGroupAgreement = sequelize.define('UserGroupAgreement', {
         user: {
             type: Sequelize.INTEGER,
-            references: models.User,
-            referencesKey: "id"
+            // references: models.User,
+            // referencesKey: "id",
+// unique: 'compositeIndex'
         },
         group: {
             type: Sequelize.INTEGER,
-            references: models.Group,
-            referencesKey: "id"
+            // references: models.Group,
+            // referencesKey: "id",
+// unique: 'compositeIndex'
         },
         up: {
             type: Sequelize.INTEGER,
@@ -184,18 +176,6 @@ module.exports.models = function(){
         }
     });
 
-    // models.Group.hasMany(models.User);
-    // models.User.hasMany(models.Group, {'through': 'UserGroups'});
- 
-
-
-// rename userGroup to GroupUser and set index fields (so no need from through:
-// Error: ER_BAD_FIELD_ERROR: Unknown column 'UserGroups.UserId' in 'field list'
-// sequelize auto creates this table
-
-    // models.Group.hasMany(models.User, {'through': 'UserGroups'});
-    // models.User.hasMany(models.Group, {'through': 'UserGroups'});
-
 /*******************************************************************************
 ASSOCIATIONS
 *******************************************************************************/
@@ -204,7 +184,27 @@ ASSOCIATIONS
     models.User.hasMany(models.Group);
 
 
-sequelize.sync();
+/*******************************************************************************
+INDEXES
+*******************************************************************************/
+
+    if( initializing ){
+
+        var queries = [
+            // 'CREATE UNIQUE INDEX `user_group_agreement` ON `UserGroupAgreements` (`user`, `group`);',
+            'CREATE UNIQUE INDEX  `post_group_vote` ON `PostGroupVotes` (`postId`, `groupId`);'
+        ];
+
+        queries.forEach(function(query){
+            sequelize.query(query)
+                .success(function(){})
+                .error(function(e){ console.log(e); })        
+        });
+
+    }
+
+
+    sequelize.sync();
 
     return models;
 }
