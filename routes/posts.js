@@ -192,45 +192,37 @@ var updateUserGroupAgreement = function(
 
 
 
-if( userId !== 1 && userId !== 1 ){  
+// if( userId !== 1 && userId !== 1 ){  
 
-console.log(userId);
+// console.log(userId);
 
-    UserGroupAgreement.findOrCreate(
-        {group: groupId,
-        user: userId}
-    )
+//     UserGroupAgreement.findOrCreate(
+//         {group: groupId,
+//         user: userId}
+//     )
 
-    .success(function(i){
+//     .success(function(i){
 
-// console.log(i);
+// // console.log(i);
 
-        callback();
-    })
+//         callback();
+//     })
 
-    .error(function(){callback()})
-
-
-} else {
-    callback();
-}
+//     .error(function(){callback()})
 
 
-
-
-
-
-
-
-
-
-
-
+// } else {
+//     callback();
+// }
 
 
     UserGroupAgreement.findOrCreate(
-        {group: groupId},
-        {user: userId}
+        // {group: groupId},
+        // {user: userId}
+        {
+            group: groupId,
+            user: userId
+        }
     )
 
     // update vote
@@ -482,6 +474,8 @@ var seed = function(callback){
 }
 
 seed();
+
+
 
 // UserGroupAgreement.findOrCreate(
 //     {group: 666},
