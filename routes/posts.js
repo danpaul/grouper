@@ -37,6 +37,8 @@ var UserVote = models.UserVote;
 // Takes user and post models, does all vote updating magic then calls callback
 var castUserVote = function(user, post, vote, callback){
 
+// castUserVote(user, post, UPVOTE, callback_c);
+
     // confirm user has not yet voted for post
     UserVote.find({ where: {
         user: user.id,
@@ -57,6 +59,7 @@ var castUserVote = function(user, post, vote, callback){
 
         .success(function(userVote){
             // find vote total
+            // this should get refractored out and just added to the post
             PostVoteTotal.findOrCreate({
                 post: post.id
             })
@@ -77,11 +80,12 @@ var castUserVote = function(user, post, vote, callback){
 var updateGroupVotes = function(user, postId, vote, callback){
 
 // console.log(user.id);
-
+console.log(vote);
 
     user.getGroups().success(function(groups){
         // async.eachLimit(groups, ASYNC_CONCURRENCY_LIMIT, function(group, callback_b){
         async.eachSeries(groups, function(group, callback_b){
+// console.log(group.id);
             registerPostGroupVote(user.id, postId, group.id, vote, callback_b);
         }, function(e){
             if(e){ callback(e); } else { callback(); }
@@ -151,7 +155,7 @@ var registerPostGroupVote = function(userId, postId, groupId, vote, callback){
 
 // console.log(userId);
 ////FIX !!!!
-
+// console.log(vote);
     // find or create postGroupVote
     PostGroupVote.findOrCreate({
         groupId: groupId,
@@ -286,7 +290,7 @@ var seed = function(callback){
 
     var numberOfGroups = 4;
     var numberOfPosts = 10;
-    var numberOfUsers = 10;
+    var numberOfUsers = 20;
 
     var users = [];
     var posts = [];
@@ -310,9 +314,7 @@ var seed = function(callback){
                         numberOfGroups--;
                         callback_b();
                     })
-                    .error(function(e){
-                        callback_b(e);
-                    })
+                    .error(callback_b)
                 },
 
                 function (err) {
@@ -379,10 +381,7 @@ var seed = function(callback){
                         numberOfPosts--;
                         callback_b();
                     })
-                    .error(function(e){
-                        console.log(e);
-                        callback_b(e);
-                    })
+                    .error(callback_b)
                 },
 
                 function (e) {
@@ -396,7 +395,7 @@ var seed = function(callback){
 
         },
 
-        // add users to groups
+        // // add users to groups
         function(callback){
             async.eachSeries(users, function(user, callback_b){
                 async.eachLimit(groups, 10, function(group, callback_c){
@@ -419,18 +418,20 @@ var seed = function(callback){
         // create user votes (odd users vote for odd posts and even users vote
         //      for event posts)
         function(callback){
-            // async.eachSeries(
+// console.log('here');
             async.eachSeries(
                 users,
                 function(user, callback_b){
-
-                    async.eachLimit(
+// console.log('bar');
+                    async.eachSeries(
                         posts,
-                        10,
+                        // 10,
                         function(post, callback_c){
-
-                            // cast a random vote 1/5 times
-                            if( Math.random() < 0.2 ){
+// console.log('foo');
+                            // cast a random vote 1/2 times
+                            // if( Math.random() < 0.5 ){
+// console.log(Math.random() < 0.5);
+                            if( true ){
                                 if( Math.random() < 0.5 ){
                                     castUserVote(user, post, UPVOTE, callback_c);
                                 } else {
@@ -463,18 +464,17 @@ var seed = function(callback){
             );
         },
 
-        function(callback){
-            console.log('user votes cast');
-            console.log('finished seeding');
-            callback();
-        }
+        // function(callback){
+        //     console.log('user votes cast');
+        //     console.log('finished seeding');
+        //     callback();
+        // }
 
     ]);
 
 }
 
 seed();
-
 
 
 // UserGroupAgreement.findOrCreate(

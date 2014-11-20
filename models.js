@@ -191,8 +191,8 @@ INDEXES
     if( initializing ){
 
         var queries = [
-            'CREATE UNIQUE INDEX `user_group_agreement` ON `UserGroupAgreements` (`user`, `group`);',
-            'CREATE UNIQUE INDEX  `post_group_vote` ON `PostGroupVotes` (`postId`, `groupId`);'
+            'CREATE UNIQUE INDEX `user_group_index` ON UserGroupAgreements (`user`, `group`);',
+            'CREATE UNIQUE INDEX  `post_group_index` ON PostGroupVotes (`postId`, `groupId`);'
         ];
 
         queries.forEach(function(query){
