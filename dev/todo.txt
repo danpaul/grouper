@@ -1,3 +1,9 @@
+- maybe migrate mysql driver to https://github.com/felixge/node-mysql - start developing lightweight ORM
+
+- confirm all model accessors/setters are being used: http://sequelizejs.com/docs/latest/models
+
+- clean up models in vote_controller: http://screencast.com/t/am7str9sPjb
+
 - post vote totals should just be part of post
 
 - all functions with find or create should have a "retry" function
