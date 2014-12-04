@@ -13,7 +13,7 @@ var groupController = require('../lib/group_controller.js');
 
 // voteController.seed();
 
-groupController.groupUsers();
+// groupController.groupUsers();
 
 
 /********************************************************************************
