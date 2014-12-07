@@ -23,6 +23,7 @@
     + user.username
     + UserVote.user  UserVote.post
     + userGroupAgreements user id group id
+        - maybe total (small totals get excluded when regrouping)
     + total votes in userGroupAgreements
 
 - find way to pass argument to require
