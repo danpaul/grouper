@@ -1,3 +1,5 @@
+- make table and column name (i.e. user vs userId) consistent
+
 - maybe migrate mysql driver to https://github.com/felixge/node-mysql - start developing lightweight ORM
 
 - confirm all model accessors/setters are being used: http://sequelizejs.com/docs/latest/models
