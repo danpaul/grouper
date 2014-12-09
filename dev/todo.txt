@@ -1,3 +1,5 @@
+- investigate memory/table size
+
 - make table and column name (i.e. user vs userId) consistent
 
 - maybe migrate mysql driver to https://github.com/felixge/node-mysql - start developing lightweight ORM
