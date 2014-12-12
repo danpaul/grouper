@@ -54,8 +54,24 @@ module.exports.models = function(){
         },
         user: {
             type: Sequelize.INTEGER,
-            references: models.User,
-            referencesKey: "id"
+            references: models.User
+            // referencesKey: "id"
+        },
+        up: {
+            type: Sequelize.INTEGER,
+            defaultValue: 0,
+        },
+        down: {
+            type: Sequelize.INTEGER,
+            defaultValue: 0
+        },
+        total: {
+            type: Sequelize.INTEGER,
+            defaultValue: 0
+        },
+        percentageUp: {
+            type: Sequelize.FLOAT,
+            defaultValue: 0.0
         }
     });
 
@@ -88,29 +104,29 @@ module.exports.models = function(){
     //  }
     // });
 
-    models.PostVoteTotal = sequelize.define('PostVoteTotal', {
-        post: {
-            type: Sequelize.INTEGER,
-            references: models.Post,
-            referencesKey: "id"
-        },
-        up: {
-            type: Sequelize.INTEGER,
-            defaultValue: 0,
-        },
-        down: {
-            type: Sequelize.INTEGER,
-            defaultValue: 0
-        },
-        total: {
-            type: Sequelize.INTEGER,
-            defaultValue: 0
-        },
-        percentageUp: {
-            type: Sequelize.FLOAT,
-            defaultValue: 0.0
-        }
-    });
+    // models.PostVoteTotal = sequelize.define('PostVoteTotal', {
+    //     post: {
+    //         type: Sequelize.INTEGER,
+    //         references: models.Post,
+    //         referencesKey: "id"
+    //     },
+    //     up: {
+    //         type: Sequelize.INTEGER,
+    //         defaultValue: 0,
+    //     },
+    //     down: {
+    //         type: Sequelize.INTEGER,
+    //         defaultValue: 0
+    //     },
+    //     total: {
+    //         type: Sequelize.INTEGER,
+    //         defaultValue: 0
+    //     },
+    //     percentageUp: {
+    //         type: Sequelize.FLOAT,
+    //         defaultValue: 0.0
+    //     }
+    // });
 
     models.PostGroupVote = sequelize.define('PostGroupVote', {
         postId: {
@@ -192,7 +208,8 @@ INDEXES
 
         var queries = [
             'CREATE UNIQUE INDEX `user_group_index` ON UserGroupAgreements (`user`, `group`);',
-            'CREATE UNIQUE INDEX  `post_group_index` ON PostGroupVotes (`postId`, `groupId`);'
+            'CREATE UNIQUE INDEX  `post_group_index` ON PostGroupVotes (`postId`, `groupId`);',
+            'CREATE UNIQUE INDEX  `user_vote_index` ON UserVotes (`user`, `post`);'
         ];
 
         queries.forEach(function(query){

@@ -1,3 +1,7 @@
+- consider removing/modifying datetime/timestamp fields
+
+- remove id field from UserVote table
+
 - investigate memory/table size
 
 - make table and column name (i.e. user vs userId) consistent
