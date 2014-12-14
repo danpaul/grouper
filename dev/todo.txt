@@ -1,4 +1,6 @@
 
+- confirm limits when getting users, groups, etc. in seeding
+
 - redo schema
     + all lowercase tables
     + no "ids" in table names
