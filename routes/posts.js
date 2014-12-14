@@ -1,13 +1,12 @@
 // check post group votes
 
+var app = global.grouper_app;
+var knex = app.get('GROUPER_KNEX');
+
 var express = require('express');
 var router = express.Router();
-
-var models = require('../models.js').models();
-
 var helpers = require('../inc/helpers.js');
 var async = require('async');
-
 var voteController = require('../lib/vote_controller.js');
 var groupController = require('../lib/group_controller.js');
 
@@ -16,9 +15,7 @@ voteController.seed(function(err){
     else{ console.log('seeding complete'); }
 });
 
-
 // groupController.groupUsers();
-
 
 /********************************************************************************
                 POSTS

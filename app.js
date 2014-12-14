@@ -24,13 +24,24 @@ var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var expressSession = require('express-session');
 
+
+
+
+var app = express();
+app.set('GROUPER_ENV', 'local');
+require('./settings').init(app);
+
+
+
 var Sequelize = require('sequelize');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var posts = require('./routes/posts');
 
-var app = express();
+
+
+
 
 // app.sequelize = new Sequelize('grouper', 'root', 'root', {
 //     dialect: "mysql",

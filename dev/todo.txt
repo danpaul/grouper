@@ -1,3 +1,20 @@
+
+- redo schema
+    + all lowercase tables
+    + no "ids" in table names
+    + better indexes
+    + no unecessary fields
+    + no foreign keys
+
+- redo norm
+    + make as a query builder
+    + each operation adds to query and params
+    + use exec to execute the query or getQuery to get mysql string
+
+
+
+- make postGroupVote primary key postid + group id
+
 - consider removing/modifying datetime/timestamp fields
 
 - remove id field from UserVote table
