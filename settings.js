@@ -18,12 +18,14 @@ module.exports.init = function(app){
 
         pool.min = 0;
         pool.max = 10;
+        debug = false;
     }
 
     knex = require('knex')({
         'client': client,
         'connection': db,
-        'pool': pool
+        'pool': pool,
+        'debug': debug
     });
 
     app.set('GROUPER_KNEX', knex);

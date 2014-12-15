@@ -10,10 +10,21 @@ var async = require('async');
 var voteController = require('../lib/vote_controller.js');
 var groupController = require('../lib/group_controller.js');
 
-voteController.seed(function(err){
+
+
+var seedController = require('../lib/seed_controller');
+
+
+seedController.seed(function(err){
     if(err){ console.log(err); }
     else{ console.log('seeding complete'); }
 });
+
+
+// voteController.seed(function(err){
+//     if(err){ console.log(err); }
+//     else{ console.log('seeding complete'); }
+// });
 
 // groupController.groupUsers();
 
