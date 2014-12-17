@@ -15,10 +15,10 @@ var groupController = require('../lib/group_controller.js');
 var seedController = require('../lib/seed_controller');
 
 
-seedController.seed(function(err){
-    if(err){ console.log(err); }
-    else{ console.log('seeding complete'); }
-});
+// seedController.seed(function(err){
+//     if(err){ console.log(err); }
+//     else{ console.log('seeding complete'); }
+// });
 
 
 // voteController.seed(function(err){

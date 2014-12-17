@@ -39,28 +39,14 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 var posts = require('./routes/posts');
 
+var voteTest = require('./test/vote');
+
+voteTest.runTest();
 
 
 
 
-// app.sequelize = new Sequelize('grouper', 'root', 'root', {
-//     dialect: "mysql",
-//     port: 8889,
-// });
 
-// app.models = require('./models.js').models(app.sequelize);
-
-// app.models = require('./models.js').models();
-
-// app.sequelize
-//     .sync({ force: true })
-//     .complete(function(err) {
-//         if (!!err) {
-//             console.log('An error occurred.', err);
-//         } else {
-//             console.log('It worked!');
-//         }
-//     });
 
 
 
