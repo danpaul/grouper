@@ -3,21 +3,13 @@
 
 var userModel = {};
 var async = require('async');
+var baseModel = require('./base');
 var knex = global.grouper_app.get('GROUPER_KNEX');
 
 userModel.add = function(userData, callbackIn){
-
 	// TODO: validation
-	knex('users')
-		.insert(userData)
-		.then(function(rows){ callbackIn(null, rows[0]); })
-		.catch(callbackIn);
+	baseModel.add('users', userData, callbackIn);
 }
-
-
-
-
-
 
 userModel.createSeedUsers = function(numberOfUsers, callbackIn){
 
@@ -46,10 +38,6 @@ userModel.createSeedUsers = function(numberOfUsers, callbackIn){
     	else{ callbackIn(null, userIds); }
     })
 }
-
-
-
-
 
 module.exports = userModel;
 

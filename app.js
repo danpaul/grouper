@@ -41,7 +41,10 @@ var posts = require('./routes/posts');
 
 var voteTest = require('./test/vote');
 
-voteTest.runTest();
+voteTest.runTest(function(err){
+    if(err){ console.log(err); }
+    else{ console.log('sussess!'); }
+});
 
 
 
