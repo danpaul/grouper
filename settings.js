@@ -30,6 +30,6 @@ module.exports.init = function(app){
 
     app.set('GROUPER_KNEX', knex);
 
-
+    app.set
 
 };

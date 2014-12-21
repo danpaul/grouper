@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS `groups_users` (
 
 -- --------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS `post_group_votes` (
+CREATE TABLE IF NOT EXISTS `group_votes` (
   `post` int(11) DEFAULT NULL,
   `group` int(11) DEFAULT NULL,
   `up` int(11) DEFAULT '0',

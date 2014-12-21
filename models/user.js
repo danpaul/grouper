@@ -2,13 +2,49 @@
 
 
 var userModel = {};
+
 var async = require('async');
 var baseModel = require('./base');
+var groupModel = require('./group.js');
 var knex = global.grouper_app.get('GROUPER_KNEX');
+var voteModel = require('./vote');
 
 userModel.add = function(userData, callbackIn){
 	// TODO: validation
 	baseModel.add('users', userData, callbackIn);
+}
+
+userModel.castVote = function(userId, postId, vote, callbackIn){
+
+    userModel.userHasNotVoted(userId, postId, callbackIn, function(){
+           knex('user_votes')
+            .insert({
+                'user': userId,
+                'post': postId,
+                'vote': vote
+            })
+            .then(function(userVoteId){
+                voteModel.updateVote('posts', postId, vote, function(err){
+                    if( err ){ callbackIn(err); }
+                    else{
+                        groupModel.updateUsersGroupVotes(userId, postId, vote, callbackIn);
+                    }
+                });
+            })
+            .catch(callbackIn)
+    });
+}
+
+userModel.userHasNotVoted = function(userId, postId, alreadyVotedCallback, notVotedCallback){
+
+    knex('user_votes')
+        .select('user')
+        .where({user: userId, post: postId})
+        .then(function(rows){
+            if( rows.length !== 0 ){ alreadyVotedCallback; }
+            else{ notVotedCallback(); }
+        })
+        .catch(alreadyVotedCallback)
 }
 
 userModel.createSeedUsers = function(numberOfUsers, callbackIn){
@@ -37,6 +73,16 @@ userModel.createSeedUsers = function(numberOfUsers, callbackIn){
     	if(err){ callbackIn(err); }
     	else{ callbackIn(null, userIds); }
     })
+}
+
+userModel.getGroups = function(userId, callbackIn){
+    knex('groups_users')
+        .where({user: userId})
+        .select('group')
+        .then(function(rows){
+            callbackIn(null, rows.map(function(row){ return row.group }));
+        })
+        .catch(callbackIn)
 }
 
 module.exports = userModel;
