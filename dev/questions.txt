@@ -1,0 +1,3 @@
+
+
+- if there is a compound key in a mysql table, is the efficiency of looking up by one of the keys as efficient as a lookup by both, does the order matter?

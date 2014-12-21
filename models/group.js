@@ -62,7 +62,7 @@ groupModel.updateUserGroupAgreements = function(groupId, userId, postId, vote, c
             if( userAgreementVote === null ){ callbackIn(); }
             // update user_group_agreement
             else {
-                var updateObj = voteController.getMultiKeyVoteQuery( 'user_group_agreements', 'user', userId, 'group', groupId, userAgreementVote);
+                var updateObj = voteModel.getMultiKeyVoteQuery( 'user_group_agreements', 'user', userId, 'group', groupId, userAgreementVote);
                 knex.raw(updateObj.statement, updateObj.params)
                     .then(function(){ callbackIn(); })
                     .catch(callbackIn)

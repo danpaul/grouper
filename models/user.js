@@ -52,8 +52,9 @@ userModel.createSeedUsers = function(numberOfUsers, callbackIn){
     var users = [];
     var userIds = [];
     var currentTime = new Date().getTime()
+    var i;
 
-    for( var i = 0; i < numberOfUsers; i++ ){
+    for( i = 0; i < numberOfUsers; i++ ){
         users.push({
             email: 'email_' + i.toString() + '_' + currentTime + '@asdf.com',
             username: 'user_' + i.toString() + '_' + currentTime,
@@ -82,6 +83,16 @@ userModel.getGroups = function(userId, callbackIn){
         .then(function(rows){
             callbackIn(null, rows.map(function(row){ return row.group }));
         })
+        .catch(callbackIn)
+}
+
+userModel.getRecentVotes = function(userId, numberOfVotes, callbackIn){
+    knex('user_votes')
+        .where({user: userId})
+        .select(['vote', 'post'])
+        .orderBy('created', 'desc')
+        .limit(numberOfVotes)
+        .then(function(rows){ callbackIn(null, rows); })
         .catch(callbackIn)
 }
 

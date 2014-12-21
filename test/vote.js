@@ -5,16 +5,19 @@ var async = require('async');
 var assert = require('assert');
 var constants = require('../constants.js');
 var groupModel = require('../models/group');
+var groupVoteModel = require('../models/group_vote');
 var postModel = require('../models/post');
 var userModel = require('../models/user');
 var voteModel = require('../models/vote');
 var voteTest = {};
 
 var settings = {
-    numberOfGroups: 10,
+    numberOfGroups: 10, // should be at least 10
     numberOfPosts: 100, // should be at least 10
-    numberOfUsers: 4, // should be at least 2
+    numberOfUsers: 10, // should be at least 10
     numberOfBiasTests: 1000,
+    numberOfTestVotes: 10,
+    numberOfTestGroups: 4,
     testBias: 0.1
 }
 
@@ -24,14 +27,13 @@ voteTest.runTest = function(callbackIn){
     var userIds;
     var postIds;
 
-    var testVotes1 = 10;
-
     async.waterfall([
         // validate settings
         function(callback){
-            assert((settings.numberOfUsers > 1), 'There must be at least 2 users');
-            assert((settings.numberOfGroups > 1), 'There must be at least 2 groups');
+            assert((settings.numberOfUsers > 9), 'There must be at least 10 users');
+            assert((settings.numberOfGroups > 9), 'There must be at least 10 groups');
             assert((settings.numberOfPosts > 9), 'There must be at least 10 posts');
+            assert((settings.numberOfTestVotes === 10), 'There must be exactly 10 test votes');
             callback();
         },
         // create groups
@@ -85,37 +87,73 @@ voteTest.runTest = function(callbackIn){
             assert( ((average > 0.45) && (average < 0.55)), 'Bias average is incorrect');
             callback();
         },        
-        // assign users to groups
+        // assign users 1 and 2 to test groups
         function(callback){
             async.eachSeries([userIds[0], userIds[1]], function(userId, callbackB){
-                async.eachSeries([groupIds[0], groupIds[1]], function(groupId, callbackC){
-                    groupModel.assignUserToGroup(userId, groupId, callbackC);
+                async.eachSeries(_.range(settings.numberOfTestGroups), function(number, callbackC){
+                    groupModel.assignUserToGroup(userId, groupIds[number], callbackC);
                 }, callbackB);
             }, callback);
         },
         // confirm user are assigned
         function(callback){
+            var errorMessage = 'User not assigned to group correctly.';
             async.eachSeries([userIds[0], userIds[1]], function(userId, callbackB){
                 userModel.getGroups(userId, function(err, groupIdsReturned){
                     if( err ){ callbackB(err); }
                     else{
-                        assert(groupIdsReturned[0] === groupIds[0]);
-                        assert(groupIdsReturned[1] === groupIds[1]);
+                        _.each(_.range(settings.numberOfTestGroups), function(number){
+                            assert((groupIdsReturned[number] === groupIds[number]), errorMessage);
+                        });
                         callbackB();
                     }
                 });
             }, callback);
         },
-        // cast user votes
+        // have user 1 cast 10 upvotes
         function(callback){
-            async.eachSeries(_.range(testVotes1), function(number, callbackB){
-                userModel.castVote(userIds[0], postIds[number], constants.upvote, callbackB);
-            },
-            callback);
+            castTestVotes(userIds[0], postIds, constants.upvote, callback);
+        },
+        // check users votes
+        function(callback){
+            userModel.getRecentVotes(userIds[0], settings.numberOfTestVotes, function(err, votes){
+                if( err ){ callback(err); }
+                else{
+                    votes.forEach(function(voteObj){
+                        assert((voteObj.vote === constants.upvote), 'User votes are not correct.');
+                    });
+                    callback();
+                }
+            });
+        },
+        // have user 2 cast 10 upvotes
+        function(callback){
+            castTestVotes(userIds[1], postIds, constants.upvote, callback);
+        },
+        // confirm group votes are recorded
+        function(callback){
+            async.eachSeries(_.range(settings.numberOfTestGroups), function(number, callbackB){
+                groupVoteModel.getGroupVotes(groupIds[number], function(err, groupVote){
+                    if( err ){ callbackB(err); }
+                    else{
+console.log(groupVote);
+                        callbackB();
+                    }
+                });
+            }, callback)
+            
         }
 
 
+
+
     ], callbackIn);
+}
+
+function castTestVotes(userId, postIds, vote, callback){
+    async.eachSeries(_.range(settings.numberOfTestVotes), function(number, callback){
+        userModel.castVote(userId, postIds[number], vote, callback);
+    }, callback);
 }
 
 module.exports = voteTest;

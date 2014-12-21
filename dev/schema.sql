@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS `user_votes` (
   `vote` tinyint(1) DEFAULT NULL,
   `user` int(11) DEFAULT NULL,
   `post` int(11) DEFAULT NULL,
-  `created` datetime NOT NULL,
-  `updated_at` datetime NOT NULL,
-  PRIMARY KEY (`user`, `post`)
+  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user`, `post`),
+  INDEX(`created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
