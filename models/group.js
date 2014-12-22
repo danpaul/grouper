@@ -20,6 +20,30 @@ groupModel.assignUserToGroup = function(userId, groupId, callbackIn){
         // if( err.code === 'ER_DUP_ENTRY' ){ callback(); }
 }
 
+groupModel.assignUsersToGroups = function(groupIds, userIds, numberOfGroupsUserBelongsTo, callbackIn){
+    var count;
+    var currentGroup = 0;
+
+    async.eachSeries(userIds, function(userId, callback){
+        count = 0;
+        async.whilst(
+            function(){ return count < numberOfGroupsUserBelongsTo },
+            function(callbackB){
+                groupModel.assignUserToGroup(userId, groupIds[currentGroup], function(err){
+                    if(err){ callbackB(err); }
+                    else{
+                        count++;
+                        currentGroup++;
+                        if( currentGroup === groupIds.length ){ currentGroup = 0; }
+                        callbackB();
+                    }
+                });
+            },
+            callback
+        )
+    }, callbackIn)
+}
+
 groupModel.createSeedGroups = function(numberOfGroups, callbackIn){
 
     var groups = [];

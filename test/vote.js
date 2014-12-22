@@ -16,7 +16,7 @@ var settings = {
     numberOfPosts: 100, // should be at least 10
     numberOfUsers: 10, // should be at least 10
     numberOfBiasTests: 1000,
-    numberOfTestVotes: 10,
+    numberOfTestVotes: 10, // should also be even
     numberOfTestGroups: 4,
     testBias: 0.1
 }
@@ -87,11 +87,12 @@ voteTest.runTest = function(callbackIn){
             assert( ((average > 0.45) && (average < 0.55)), 'Bias average is incorrect');
             callback();
         },        
-        // assign users 1 and 2 to test groups
+        // assign users to test groups
         function(callback){
-            async.eachSeries([userIds[0], userIds[1]], function(userId, callbackB){
+            // async.eachSeries([userIds[0], userIds[1]], function(userId, callbackB){
+            async.eachSeries(_.range(settings.numberOfUsers), function(userNumber, callbackB){
                 async.eachSeries(_.range(settings.numberOfTestGroups), function(number, callbackC){
-                    groupModel.assignUserToGroup(userId, groupIds[number], callbackC);
+                    groupModel.assignUserToGroup(userIds[userNumber], groupIds[number], callbackC);
                 }, callbackB);
             }, callback);
         },
@@ -133,20 +134,75 @@ voteTest.runTest = function(callbackIn){
         // confirm group votes are recorded
         function(callback){
             async.eachSeries(_.range(settings.numberOfTestGroups), function(number, callbackB){
-                groupVoteModel.getGroupVotes(groupIds[number], function(err, groupVote){
+                groupVoteModel.getGroupVotes(groupIds[number], function(err, groupVotes){
                     if( err ){ callbackB(err); }
                     else{
-console.log(groupVote);
+                        groupVotes.forEach(function(voteObj){
+                            assert((voteObj.up === 2), 'Upvotes not correct');
+                            assert((voteObj.down === 0), 'Downvotes not correct');
+                            assert((voteObj.total === 2), 'Total votes not correct');
+                            assert((voteObj.percentage_up === 1.0), 'Percentage up votes not correct');
+                        });
                         callbackB();
                     }
                 });
             }, callback)
-            
+        },
+        // have user 3 cast 10 upovtes
+        function(callback){
+            castTestVotes(userIds[2], postIds, constants.upvote, callback);
+        },
+        // have user 4 cast 10 downvotes
+        function(callback){
+            castTestVotes(userIds[3], postIds, constants.downvote, callback);
+        },
+        // confirm user 4 votes went through
+        function(callback){
+            userModel.getRecentVotes(userIds[3], settings.numberOfTestVotes, function(err, votes){
+                if( err ){ callback(err); }
+                else{
+                    votes.forEach(function(vote){
+                        assert((vote.vote = constants.downvote ), 'Downvotes did not get set');
+                    });
+                    callback();
+                }
+            });
+        },
+        // check group votes
+        function(callback){
+            async.eachSeries(_.range(settings.numberOfTestGroups), function(number, callbackB){
+                groupVoteModel.getGroupVotes(groupIds[number], function(err, groupVotes){
+                    if( err ){ callbackB(err); }
+                    else{
+                        groupVotes.forEach(function(voteObj){
+                            assert((voteObj.percentage_up === 0.75), 'Percentage up votes not correct');
+                        });
+                        callbackB();
+                    }
+                });
+            }, callback)
+        },
+        // have user 5 cast half upvotes and half downvotes
+        function(callback){
+            var vote;
+            async.eachSeries(_.range(settings.numberOfTestVotes), function(number, callbackB){
+                if( number % 2 === 0 ){ vote = constants.upvote; }
+                else{ vote = constants.downvote; }
+                userModel.castVote(userIds[4], postIds[number], vote, callbackB);
+            }, callback);
+        },
+        // confirm user 5 has 50% agreement
+        function(callback){
+            userModel.getRecentVotes(userIds[4], settings.numberOfTestVotes, function(err, votes){
+                if( err ){ callback(err); }
+                else{
+                    votes.forEach(function(vote){
+                        assert((vote.percentage_up = 0.5 ), 'User group agreement not correct');
+                    });
+                    callback();
+                }
+            });
         }
-
-
-
-
     ], callbackIn);
 }
 
