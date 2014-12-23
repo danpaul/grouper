@@ -29,7 +29,6 @@ var settings = {
 
 grouping.runTest = function(callbackIn){
     var goupIds;
-    var groupingsObject;
     var userIds;
     var postIds;
 
@@ -70,9 +69,14 @@ grouping.runTest = function(callbackIn){
 
     // create groupings
     function(callback){
-        groupingsObject = grouping.createGroupings(userIds, settings.numberOfGroupings, settings.numberOfGroupingsUserBelongsTo);
-console.log(groupingsObject)
-        callback();
+        var groupingsObject = grouping.createGroupings(userIds, settings.numberOfGroupings, settings.numberOfGroupingsUserBelongsTo);
+// console.log(groupingsObject)
+// TODO: users are tending to agree a lot, (non below 50%)
+// TODO: revise groupingObject, don't need groupings returned
+// TODO: cycle through grouping/voteCycle
+        grouping.voteCycle(groupingsObject, postIds, callback);
+
+        // callback();
     }
 
 
@@ -80,6 +84,47 @@ console.log(groupingsObject)
     ], callbackIn)
 
     // callbackIn();
+}
+
+grouping.voteCycle = function(groupingObject, postIds, callbackIn){
+
+    var userGroupMap = groupingObject.userGroupMap;
+
+
+    var userIds = _.map(userGroupMap, function(groupingIndexes, userId){
+        return userId;
+        // var tmp = {};
+        // tmp[userId] = _.sample(groupingIndexes);
+        // return tmp;
+    });
+
+    console.log(userIds);    
+
+    // foreach post
+    async.eachSeries(postIds, function(postId, callback){
+        var groupBias = {};
+        // shuffle user ids
+        userIds = _.shuffle(userIds);
+// console.log(userIds)
+
+        // foreach user
+        async.eachSeries(userIds, function(userId, callbackB){
+            // get random group
+            var group = _.sample(userGroupMap[userId]);
+            var bias;
+            var vote;
+
+            // get vote bias
+            if( typeof(groupBias[group]) === 'undefined' )
+            {
+                
+                groupBias[group] = voteModel.getRandomBias(settings.testBias);
+            }
+            bias = groupBias[group];
+            vote = voteModel.getVoteFromBias(bias);
+            userModel.castVote(userId, postId, vote, callbackB);
+        }, callback);
+    }, callbackIn);
 }
 
 grouping.createGroupings = function(userIds, numberOfGroupings, numberOfGroupingsUserBelongsTo){

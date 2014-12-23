@@ -12,12 +12,17 @@ var knex = global.grouper_app.get('GROUPER_KNEX');
 // Bias should be a float between 0.0 - 0.5
 // Function will return 0.5 + or - bias
 voteModel.getRandomBias = function(bias){
-    if( Math.random() > 0.5 ){ return 0.5 + bias; }
+    if( Math.random() >= 0.5 ){ return 0.5 + bias; }
     else{ return 0.5 - bias;  }
 }
 
-
-
+// bias should be a value close to 0.5
+// if the value is less than 0.5, the vote will more likely be an upvote
+// else, the vote will more likely be a downvote
+voteModel.getVoteFromBias= function(bias){
+    if( Math.random() >= bias ){ return constants.upvote; }
+    else{ return constants.downvote; }
+}
 
 /**
 * @param - takes int userVote, float percentage of upvotes, int total votes cast
