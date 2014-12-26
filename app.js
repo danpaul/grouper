@@ -48,7 +48,7 @@ var grouping = require('./test/grouping.js');
 // });
 
 grouping.runTest(function(err){
-    if( err ){ callback(err); }
+    if( err ){ console.log(err); }
     else{
         console.log('seeded');
     }

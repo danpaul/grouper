@@ -25,19 +25,21 @@ var voteModel = require('../models/vote');
 // }
 
 var settings = {
-    numberOfGroups: 10, // should be at least 10
-    numberOfGroupsUserBelongsTo: 10,
-    numberOfPosts: 1000, // should be at least 10
-    numberOfUsers: 20, // should be at least 10
-    numberOfGroupings: 10,
-    numberOfGroupingsUserBelongsTo: 3,
-    testBias: 0.1
+    numberOfGroups: 4, // should be at least 10
+    numberOfGroupsUserBelongsTo: 2,
+    numberOfPosts: 10, // should be at least 10
+    numberOfUsers: 10, // should be at least 10
+    numberOfGroupings: 4,
+    numberOfGroupingsUserBelongsTo: 2,
+    testBias: 0.1,
+    numberOfCycles: 4
 }
 
 grouping.runTest = function(callbackIn){
     var goupIds;
-    var userIds;
+    var userIds;    
     var postIds;
+    var userGroupMap
 
     async.waterfall([
 
@@ -76,8 +78,21 @@ grouping.runTest = function(callbackIn){
 
     // create groupings
     function(callback){
-        var userGroupMap = grouping.createGroupings(userIds, settings.numberOfGroupings, settings.numberOfGroupingsUserBelongsTo);
-        grouping.voteCycle(userGroupMap, postIds, callback);
+        userGroupMap = grouping.createGroupings(userIds, settings.numberOfGroupings, settings.numberOfGroupingsUserBelongsTo);
+        callback();
+        // grouping.voteCycle(userGroupMap, postIds, callback);
+    },
+
+    // cycle votings and groupings
+    function(callback){
+        async.eachSeries(_.range(settings.numberOfCycles), function(cycleNumber, callbackB){
+            grouping.voteCycle(userGroupMap, postIds, function(err){
+                if( err ){ callbackB(err); }
+                else{
+                    groupModel.groupUsers(groupIds, callbackB);
+                }
+            });
+        }, callback);
     }
 
 
@@ -97,18 +112,16 @@ grouping.voteCycle = function(userGroupMap, postIds, callbackIn){
 
         // foreach user
         async.eachSeries(userIds, function(userId, callbackB){
-            // get random group
-            var group = _.sample(userGroupMap[userId]);
-            var bias;
-            var vote;
 
+            // get random grouping user belongs to
+            var group = _.sample(userGroupMap[userId]);
             // get vote bias
             if( typeof(groupBias[group]) === 'undefined' )
             {                
                 groupBias[group] = voteModel.getRandomBias(settings.testBias);
             }
-            bias = groupBias[group];
-            vote = voteModel.getVoteFromBias(bias);
+            var bias = groupBias[group];
+            var vote = voteModel.getVoteFromBias(bias);
             userModel.castVote(userId, postId, vote, callbackB);
         }, callback);
     }, callbackIn);
