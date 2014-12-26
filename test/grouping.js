@@ -15,14 +15,14 @@ var voteModel = require('../models/vote');
 
 
 var settings = {
-    numberOfGroups: 10, // should be at least 10
-    numberOfPosts: 100, // should be at least 10
-    numberOfUsers: 10, // should be at least 10
-    numberOfGroupings: 4,
-    numberOfGroupsUserBelongsTo: 3,
+    numberOfGroups: 100, // should be at least 10
+    numberOfPosts: 10000, // should be at least 10
+    numberOfUsers: 1000, // should be at least 10
+    numberOfGroupings: 10,
+    numberOfGroupsUserBelongsTo: 20,
     numberOfGroupingsUserBelongsTo: 3,
     // numberOfBiasTests: 1000,
-    numberOfTestVotes: 10, // should also be even
+    // numberOfTestVotes: 10, // should also be even
     // numberOfTestGroups: 4,
     testBias: 0.1
 }
@@ -89,23 +89,13 @@ grouping.runTest = function(callbackIn){
 grouping.voteCycle = function(groupingObject, postIds, callbackIn){
 
     var userGroupMap = groupingObject.userGroupMap;
-
-
-    var userIds = _.map(userGroupMap, function(groupingIndexes, userId){
-        return userId;
-        // var tmp = {};
-        // tmp[userId] = _.sample(groupingIndexes);
-        // return tmp;
-    });
-
-    console.log(userIds);    
+    var userIds = _.map(userGroupMap, function(groupingIndexes, userId){ return userId; });
 
     // foreach post
     async.eachSeries(postIds, function(postId, callback){
         var groupBias = {};
         // shuffle user ids
         userIds = _.shuffle(userIds);
-// console.log(userIds)
 
         // foreach user
         async.eachSeries(userIds, function(userId, callbackB){
