@@ -26,11 +26,11 @@ var voteModel = require('../models/vote');
 
 var settings = {
     numberOfGroups: 10, // should be at least 10
-    numberOfGroupsUserBelongsTo: 3,
+    numberOfGroupsUserBelongsTo: 10,
     numberOfPosts: 1000, // should be at least 10
-    numberOfUsers: 100, // should be at least 10
+    numberOfUsers: 20, // should be at least 10
     numberOfGroupings: 10,
-    numberOfGroupingsUserBelongsTo: 5,
+    numberOfGroupingsUserBelongsTo: 3,
     testBias: 0.1
 }
 
@@ -77,7 +77,6 @@ grouping.runTest = function(callbackIn){
     // create groupings
     function(callback){
         var userGroupMap = grouping.createGroupings(userIds, settings.numberOfGroupings, settings.numberOfGroupingsUserBelongsTo);
-// console.log(userGroupMap);
         grouping.voteCycle(userGroupMap, postIds, callback);
     }
 
@@ -130,21 +129,16 @@ grouping.createGroupings = function(userIds, numberOfGroupings, numberOfGrouping
         return grouping.createGrouping(userIds, numberOfGroupings);
     });
 
-    var mergedGroupings = [];
-    allGroupings.forEach(function(grouping){
-        grouping.forEach(function(group){
-            mergedGroupings.push(group)
-        })
+    // for each grouping of groupings,
+    // add the grouping number to the user array
+    allGroupings.forEach(function(groupings){
+        for( var i = 0; i < groupings.length; i++ ){
+            groupings[i].forEach(function(userId){
+                userGroupMap[userId].push(i);
+            })
+        }
     });
 
-// console.log(mergedGroupings.length);
-
-    _.times(mergedGroupings.length, function(index){
-        _.each(mergedGroupings[index], function(userId){
-            userGroupMap[userId].push(index);
-        });
-    });
-console.log(userGroupMap);
     return userGroupMap;
 }
 
@@ -170,30 +164,6 @@ grouping.createGrouping = function(userIdsIn, numberOfGroupings){
     return groupings;
 
 }
-
-// grouping.castUserSeedVotes = function(userIds, numberOfGroupings, postIds, callbackIn){
-
-//     var groupings = [];
-//     var count = 0;
-//     var i;
-
-//     // create groupings
-//     for( i = 0; i < numberOfGroupings; i++){ groupings.push([]); }
-
-//     // add users to groupings
-//     count = 0;
-//     _.each(userIds, function(userId, index){
-//         groupings[count].push(userId);
-//         count++;
-//         if( count >= numberOfGroupings ){ count = 0; }
-//     });
-
-//     async.eachSeries(groupings, function(group, callback){
-//         castGroupingVotes(group, postIds, callback);
-//     }, callbackIn);
-
-// }
-
 
 module.exports = grouping;
 
