@@ -303,8 +303,6 @@ function processUser(userId, groupId, callbackIn){
 
 function processGroup(groupId, callbackIn){
 
-// console.log('pg'); callbackIn(); return;
-
     var numberOfUsersInGroup;
     var userAgreements;
 
@@ -435,12 +433,6 @@ function assignUser(userId, groupId, callback){
             } else { callback(); }
         });
 }
-
-
-
-
-
-
 
 
 

@@ -1,5 +1,9 @@
 (function () {
 
+/**
+    Note: Grouping test should occur on an empty DB
+*/
+
 
 var grouping = {};
 
@@ -12,7 +16,6 @@ var groupVoteModel = require('../models/group_vote');
 var postModel = require('../models/post');
 var userModel = require('../models/user');
 var voteModel = require('../models/vote');
-
 
 // var settings = {
 //     numberOfGroups: 100, // should be at least 10
@@ -61,12 +64,12 @@ grouping.runTest = function(callbackIn){
     },
 
     // create posts
-    function(callback){
-        postModel.createSeedPosts(settings.numberOfPosts, userIds[0], function(err, postIdsIn){
-            if( err ){ callback(err); }
-            else{ postIds = postIdsIn; callback(); }
-        });
-    },
+    // function(callback){
+    //     postModel.createSeedPosts(settings.numberOfPosts, userIds[0], function(err, postIdsIn){
+    //         if( err ){ callback(err); }
+    //         else{ postIds = postIdsIn; callback(); }
+    //     });
+    // },
 
     // assign users to groups
     function(callback){
@@ -77,27 +80,71 @@ grouping.runTest = function(callbackIn){
     },
 
     // create groupings
-    function(callback){
-        userGroupMap = grouping.createGroupings(userIds, settings.numberOfGroupings, settings.numberOfGroupingsUserBelongsTo);
-        callback();
-        // grouping.voteCycle(userGroupMap, postIds, callback);
-    },
+    // function(callback){
+    //     userGroupMap = grouping.createGroupings(userIds, settings.numberOfGroupings, settings.numberOfGroupingsUserBelongsTo);
+    //     callback();
+    // },
 
     // cycle votings and groupings
     function(callback){
-        async.eachSeries(_.range(settings.numberOfCycles), function(cycleNumber, callbackB){
-            grouping.voteCycle(userGroupMap, postIds, function(err){
-                if( err ){ callbackB(err); }
-                else{
-                    groupModel.groupUsers(groupIds, callbackB);
-                }
-            });
-        }, callback);
+
+        grouping.voteGroupCycle(userIds, groupIds, callback);
+
+        // console.log('here');
+
+// groupModel.groupUsers(groupIds, callback);
+
+        // async.eachSeries(_.range(settings.numberOfCycles), function(cycleNumber, callbackB){
+        //     grouping.voteCycle(userGroupMap, postIds, function(err){
+        //         if( err ){ callbackB(err); }
+        //         else{
+        //             groupModel.groupUsers(groupIds, callbackB);
+        //         }
+        //     });
+        // }, callback);
     }
 
 
 
     ], callbackIn)
+}
+
+grouping.voteGroupCycle = function(userIds, gropuIds, callbackIn){
+
+    // create groupings
+    var userGroupMap = grouping.createGroupings(userIds, settings.numberOfGroupings, settings.numberOfGroupingsUserBelongsTo);
+
+    // display grouping statistics
+
+    // foreach cycle
+    async.eachSeries(_.range(settings.numberOfCycles), function(number, callback){
+
+        var postIds = [];
+
+        async.waterfall([
+
+            // create new posts
+            function(callbackB){                
+                postModel.createSeedPosts(settings.numberOfPosts, userIds[0], function(err, postIdsIn){
+                    if( err ){ callbackB(err); }
+                    else{ postIds = postIdsIn; callbackB(); }
+                });
+            },
+
+            // have all users vote
+            function(callbackB){
+                grouping.voteCycle(userGroupMap, postIds, callbackB);
+            },
+
+            // group users based on their votes
+            function(callbackB){
+                groupModel.groupUsers(groupIds, callbackB);
+            }
+            
+            // display grouping statistics
+
+        ], callback)
+    }, callbackIn)
 }
 
 grouping.voteCycle = function(userGroupMap, postIds, callbackIn){
