@@ -4,7 +4,6 @@
     Note: Grouping test should occur on an empty DB
 */
 
-
 var grouping = {};
 
 var _ = require('underscore');
@@ -17,25 +16,15 @@ var postModel = require('../models/post');
 var userModel = require('../models/user');
 var voteModel = require('../models/vote');
 
-// var settings = {
-//     numberOfGroups: 100, // should be at least 10
-//     numberOfPosts: 10000, // should be at least 10
-//     numberOfUsers: 1000, // should be at least 10
-//     numberOfGroupings: 10,
-//     numberOfGroupsUserBelongsTo: 20,
-//     numberOfGroupingsUserBelongsTo: 3,
-//     testBias: 0.1
-// }
-
 var settings = {
-    numberOfGroups: 4, // should be at least 10
-    numberOfGroupsUserBelongsTo: 2,
-    numberOfPosts: 10, // should be at least 10
-    numberOfUsers: 10, // should be at least 10
-    numberOfGroupings: 4,
-    numberOfGroupingsUserBelongsTo: 2,
+    numberOfGroups: 10, // should be at least 10
+    numberOfGroupsUserBelongsTo: 3,
+    numberOfPosts: 100, // should be at least 10
+    numberOfUsers: 100, // should be at least 10
+    numberOfGroupings: 10,
+    numberOfGroupingsUserBelongsTo: 3,  
     testBias: 0.1,
-    numberOfCycles: 4,
+    numberOfCycles: 10,
     displayIndividualAverages: false
 }
 
@@ -64,14 +53,6 @@ grouping.runTest = function(callbackIn){
         });
     },
 
-    // create posts
-    // function(callback){
-    //     postModel.createSeedPosts(settings.numberOfPosts, userIds[0], function(err, postIdsIn){
-    //         if( err ){ callback(err); }
-    //         else{ postIds = postIdsIn; callback(); }
-    //     });
-    // },
-
     // assign users to groups
     function(callback){
         groupModel.assignUsersToGroups(groupIds, userIds, settings.numberOfGroupsUserBelongsTo, function(err){
@@ -80,29 +61,10 @@ grouping.runTest = function(callbackIn){
         });
     },
 
-    // create groupings
-    // function(callback){
-    //     userGroupMap = grouping.createGroupings(userIds, settings.numberOfGroupings, settings.numberOfGroupingsUserBelongsTo);
-    //     callback();
-    // },
-
     // cycle votings and groupings
     function(callback){
-
+        console.log('start cycling')
         grouping.voteGroupCycle(userIds, groupIds, callback);
-
-        // console.log('here');
-
-// groupModel.groupUsers(groupIds, callback);
-
-        // async.eachSeries(_.range(settings.numberOfCycles), function(cycleNumber, callbackB){
-        //     grouping.voteCycle(userGroupMap, postIds, function(err){
-        //         if( err ){ callbackB(err); }
-        //         else{
-        //             groupModel.groupUsers(groupIds, callbackB);
-        //         }
-        //     });
-        // }, callback);
     }
 
 
@@ -115,18 +77,14 @@ grouping.voteGroupCycle = function(userIds, groupIds, callbackIn){
     // create groupings
     var userGroupMap = grouping.createGroupings(userIds, settings.numberOfGroupings, settings.numberOfGroupingsUserBelongsTo);
 
-console.log(userGroupMap)
-console.log(groupIds)
-
     // foreach cycle
     async.eachSeries(_.range(settings.numberOfCycles), function(number, callback){
-
         var postIds = [];
 
         async.waterfall([
 
             // create new posts
-            function(callbackB){                
+            function(callbackB){
                 postModel.createSeedPosts(settings.numberOfPosts, userIds[0], function(err, postIdsIn){
                     if( err ){ callbackB(err); }
                     else{ postIds = postIdsIn; callbackB(); }
@@ -171,7 +129,6 @@ grouping.displayGroupStatistics = function(userIds, userGroupMap, groupIds, call
                 groupsUserBelongsTo.forEach(function(userGroup){
                     if( _.contains(usersGroupings, userGroup) ){ matchedGroups += 1; }
                 })
-
                 var userAverage = matchedGroups / groupsUserBelongsTo.length;                
 
                 if( settings.displayIndividualAverages ){
@@ -191,10 +148,6 @@ grouping.displayGroupStatistics = function(userIds, userGroupMap, groupIds, call
             callbackIn();
         }
     });
-
-
-
-
 }
 
 grouping.voteCycle = function(userGroupMap, postIds, callbackIn){

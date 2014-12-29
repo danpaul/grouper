@@ -11,13 +11,13 @@ var knex = global.grouper_app.get('GROUPER_KNEX');
 var voteModel = require('./vote');
 
 var settings = {
-    groupsToCompareUser: 2,
+    // groupsToCompareUser: 2,
     maximumGroupsToCompare: 10,
-    minimumGroupVotesToCompare: 1,
+    minimumGroupVotesToCompare: 100,
     minimumVotesToIncludeInSort: 1,
-    minimumVotesToDoUserComparison: 0,
-    percentUsersToRegroup: 0.5,
-    userPostVotesToCompare: 2,
+    minimumVotesToDoUserComparison: 10,
+    percentUsersToRegroup: 0.2,
+    userPostVotesToCompare: 20,
 }
 
 groupModel.add = function(groupData, callbackIn){
@@ -237,14 +237,21 @@ function compareUserWithAlternateGroups(userId, userVotes, callback){
     });
 }
 
+
+// user agreements are records with user id and percentage of agreement with group
 function processUsers(userAgreements, groupId, callbackIn){
 
+    // for each user agreement
     async.eachSeries(userAgreements, function(agreement, callback){
+        // see if there are other groups user has higher agreement with
         processUser(agreement.user, groupId, function(err, newAgreements){
             if(err){ callback(err); }
             else{
+// console.log('hhhh');
+// console.log(newAgreements);
                 if( newAgreements.length < 1 ){ callback(); }
                 else{
+// console.log('cccc');
                     regroupUser(
                         agreement.user,
                         groupId,
@@ -264,19 +271,19 @@ function processUsers(userAgreements, groupId, callbackIn){
 }
 
 function processUser(userId, groupId, callbackIn){
-
-    // find X number of user posts to compare to other group votes
+    // find X number of user posts to compare to other groups vote's
     knex('user_votes')
         .select(['vote', 'post', 'created'])
         .where('user', userId)
         .orderBy('created', 'desc')
         .limit(settings.userPostVotesToCompare)
         .then(function(userVotes){
+// console.log(userVotes.length); return;
             //check if user has enough votes to compare
             if( userVotes.length > settings.minimumVotesToDoUserComparison ){
                 compareUserWithAlternateGroups(userId, userVotes, callbackIn);
             } else {
-                callbackIn();
+                callbackIn(null, []);
             }
         })
         .catch(callbackIn)
@@ -340,7 +347,6 @@ function processGroup(groupId, callbackIn){
         // try to find groups that user may have more agreements with
         //   and regroup user
         function(callback){
-
             processUsers(userAgreements, groupId, callback);
         }
 
@@ -434,9 +440,6 @@ function assignUser(userId, groupId, callback){
         });
 }
 
-
-
 module.exports = groupModel;
-
 
 }())
