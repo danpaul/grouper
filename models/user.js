@@ -76,6 +76,7 @@ userModel.createSeedUsers = function(numberOfUsers, callbackIn){
     })
 }
 
+// takes userId, passes array of groupIds as second argument to callbackIn
 userModel.getGroups = function(userId, callbackIn){
     knex('groups_users')
         .where({user: userId})

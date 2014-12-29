@@ -35,7 +35,8 @@ var settings = {
     numberOfGroupings: 4,
     numberOfGroupingsUserBelongsTo: 2,
     testBias: 0.1,
-    numberOfCycles: 4
+    numberOfCycles: 4,
+    displayIndividualAverages: false
 }
 
 grouping.runTest = function(callbackIn){
@@ -109,12 +110,13 @@ grouping.runTest = function(callbackIn){
     ], callbackIn)
 }
 
-grouping.voteGroupCycle = function(userIds, gropuIds, callbackIn){
+grouping.voteGroupCycle = function(userIds, groupIds, callbackIn){
 
     // create groupings
     var userGroupMap = grouping.createGroupings(userIds, settings.numberOfGroupings, settings.numberOfGroupingsUserBelongsTo);
 
-    // display grouping statistics
+console.log(userGroupMap)
+console.log(groupIds)
 
     // foreach cycle
     async.eachSeries(_.range(settings.numberOfCycles), function(number, callback){
@@ -139,12 +141,60 @@ grouping.voteGroupCycle = function(userIds, gropuIds, callbackIn){
             // group users based on their votes
             function(callbackB){
                 groupModel.groupUsers(groupIds, callbackB);
-            }
+            },
             
             // display grouping statistics
+            function(callbackB){
+                grouping.displayGroupStatistics(userIds, userGroupMap, groupIds, callbackB);
+            }
 
         ], callback)
     }, callbackIn)
+}
+
+grouping.displayGroupStatistics = function(userIds, userGroupMap, groupIds, callbackIn){
+
+    var indivdualAverages = [];
+
+    // foreach user, get groups user belongs to
+    async.eachSeries(userIds, function(userId, callback){
+
+        // foreach group, if user belongs, userBelongs get increment
+        userModel.getGroups(userId, function(err, groupsUserBelongsTo){
+            if( err ){ callback(err); }
+            else{
+                // get the groups in the user's groupings
+                var usersGroupings = userGroupMap[userId].map(function(groupIndex){ return groupIds[groupIndex]; });
+                var matchedGroups = 0;
+
+                // groupseUserBelongs
+                groupsUserBelongsTo.forEach(function(userGroup){
+                    if( _.contains(usersGroupings, userGroup) ){ matchedGroups += 1; }
+                })
+
+                var userAverage = matchedGroups / groupsUserBelongsTo.length;                
+
+                if( settings.displayIndividualAverages ){
+                    console.log('User ' + userId + ' averages: ' + userAverage );
+                }
+                indivdualAverages.push(userAverage);
+            }
+            callback();
+        })
+    }, function(err){
+        if( err ){ callbackIn(err); }
+        else{
+            var total = 0;
+            indivdualAverages.forEach(function(avg){ total += avg; });
+            var average = total / indivdualAverages.length;
+            console.log('Total average: ' +  average);
+            callbackIn();
+        }
+    });
+
+
+
+
 }
 
 grouping.voteCycle = function(userGroupMap, postIds, callbackIn){
