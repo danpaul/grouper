@@ -16,8 +16,8 @@ var settings = {
     minimumGroupVotesToCompare: 10,
     minimumVotesToIncludeInSort: 1,
     minimumVotesToDoUserComparison: 10,
-    percentUsersToRegroup: 0.2,
-    userPostVotesToCompare: 20,
+    percentUsersToRegroup: 0.3,
+    userPostVotesToCompare: 50,
 }
 
 groupModel.add = function(groupData, callbackIn){
