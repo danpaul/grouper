@@ -23,8 +23,8 @@ var settings = {
     numberOfUsers: 100, // should be at least 10
     numberOfGroupings: 10,
     numberOfGroupingsUserBelongsTo: 3,  
-    testBias: 0.1,
-    numberOfCycles: 10,
+    testBias: 0.3,
+    numberOfCycles: 100,
     displayIndividualAverages: false
 }
 

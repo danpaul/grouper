@@ -13,7 +13,7 @@ var voteModel = require('./vote');
 var settings = {
     // groupsToCompareUser: 2,
     maximumGroupsToCompare: 10,
-    minimumGroupVotesToCompare: 100,
+    minimumGroupVotesToCompare: 10,
     minimumVotesToIncludeInSort: 1,
     minimumVotesToDoUserComparison: 10,
     percentUsersToRegroup: 0.2,
@@ -147,15 +147,40 @@ groupModel.groupUsers = function(groupIds, callbackIn){
 }
 
 function findGroupsUserDoesntBelongTo(userId, callbackIn){
+
+    // find groups user does belong to
     knex('groups_users')
-        .select(['group'])
-        .where('user', '!=', userId)
-        .then(function(userGroups){
-            var groups = _.shuffle(_.pluck(userGroups, 'group'))
-                .slice(0, settings.maximumGroupsToCompare);
-            callbackIn(null, groups);
+        .select('group')
+        .where('user', userId)
+        .then(function(groupRows){
+            var groupIds = _.pluck(groupRows, 'group');
+            // find groups user is not in
+            knex('groups')
+                .select(['id'])
+                // .where('user', '!=', userId)
+                .whereNotIn('id', groupIds)
+                .then(function(groupObjs){
+                    var groups = _.shuffle(_.pluck(groupObjs, 'id'))
+                        .slice(0, settings.maximumGroupsToCompare);
+                    callbackIn(null, groups);
+                })
+                .catch(callbackIn)
         })
         .catch(callbackIn)
+
+
+// console.log(userId);
+//     knex('groups_users')
+//         .select(['group'])
+//         // .where('user', '!=', userId)
+//         .whereNotIn('user', [userId])
+//         .then(function(userGroups){
+// // console.log(userGroups); return;
+//             var groups = _.shuffle(_.pluck(userGroups, 'group'))
+//                 .slice(0, settings.maximumGroupsToCompare);
+//             callbackIn(null, groups);
+//         })
+//         .catch(callbackIn)
 }
 
 function userAgrees( userVote, percentageGroupUpVotes ){
@@ -164,30 +189,42 @@ function userAgrees( userVote, percentageGroupUpVotes ){
     else { return false; }
 }
 
+// compares users votes on a set of posts with a groups
 function compareVotes(groupId, postVotes, postVoteIds, callbackIn){
-    //get all group UserGroupAgreement
+// console.log(postVoteIds);
+    //get group votes for posts user voted for
     knex('group_votes')
         .select(['percentage_up', 'total', 'post'])
         .where('group', groupId)
         .whereIn('post', postVoteIds)
-        .then(function(postAgreements){                
-            if( postAgreements < settings.minimumGroupVotesToCompare ){
-                callbackIn();
+        .then(function(groupVotes){
+// console.log(groupVotes);
+// return;
+            if( groupVotes < settings.minimumGroupVotesToCompare ){
+                callbackIn(null, 0.0);
             } else {
+// console.log('else');
                 var agreedVotes = 0;
                 var totalVotes = 0;
-                postAgreements.forEach(function(agreement){
+                groupVotes.forEach(function(agreement){
                     totalVotes += 1;
 
                     // user vote
-                    var uv = postVotes[agreement.postId];
+                    // var uv = postVotes[agreement.postId];
+                    var uv = postVotes[agreement.post];
+// console.log('user')
+// console.log(postVotes[agreement.post]);
                     // group vote perentage
-                    var gvp = agreement.percentageUp;
-
+                    var gvp = agreement.percentage_up;
+// console.log('group')
+// console.log(gvp)
                     if( userAgrees(uv, gvp) ){
                         agreedVotes += 1;
                     }
                 });
+// console.log(agreedVotes)
+// console.log(totalVotes)
+// return;
                 callbackIn(null, (agreedVotes / totalVotes));
             }
         })
@@ -195,8 +232,6 @@ function compareVotes(groupId, postVotes, postVoteIds, callbackIn){
 }
 
 function compareUserWithAlternateGroups(userId, userVotes, callback){
-
-// console.log(userVotes); return;
 
     // find X number of groups user does not belong to
     findGroupsUserDoesntBelongTo(userId, function(err, groupIds){
@@ -255,7 +290,7 @@ function processUsers(userAgreements, groupId, callbackIn){
                     regroupUser(
                         agreement.user,
                         groupId,
-                        agreement.percentageUp,
+                        agreement.percentage_up,
                         newAgreements,
                         callback
                     );
@@ -388,12 +423,24 @@ function regroupUser(
             newGroupAgreements,
             callback){
 
+// console.log(currentGroupAgreement);
+// console.log(newGroupAgreements);
+// return;
+
     // sort newGroupAgreements
     newGroupAgreements.sort(function(a, b){
         return(b.agreePercentage - a.agreePercentage);
     });
 
+// console.log(newGroupAgreements);
+// return
+
+// console.log(newGroupAgreements[0]['agreePercentage']);
+// console.log(currentGroupAgreement);
+
     // if agreement with new group is higher, unassign from old, reasign to new
+// console.log(newGroupAgreements);
+// console.log(userId); return;
     if( newGroupAgreements[0]['agreePercentage'] > currentGroupAgreement ){
         unasignUser(userId, currentGroupId, function(err){
             if(err){ callback(err) }
@@ -409,35 +456,65 @@ function regroupUser(
     } else { callback(); }
 }
 
-function unasignUser(userId, groupId, callback){
+function unasignUser(userId, groupId, callbackIn){
+
+    var whereObj = {
+        user: userId,
+        group: groupId
+    }
+
     // remove user group agreements
-    norm.table('UserGroupAgreements')
-        .where('user', '=', userId)
-        .where('group', '=', groupId)
-        .delete(function(err){
-            if( err ){ callback(err); }
-            else{
-                // remove user from group
-                norm.table('GroupsUsers')
-                    .where('userId', '=', userId)
-                    .where('groupId', '=', groupId)
-                    .delete(callback);
-            }
-        });
+    knex('user_group_agreements')
+        .where(whereObj)
+        .del()
+        .then(function(){
+            // remove user from group
+            knex('groups_users')
+                .where(whereObj)
+                .del()
+                .then(function(){ callbackIn(); })
+                .catch(callbackIn)
+        })
+        .catch(callbackIn)
+
+
+    // remove user group agreements
+    // norm.table('UserGroupAgreements')
+    //     .where('user', '=', userId)
+    //     .where('group', '=', groupId)
+    //     .delete(function(err){
+    //         if( err ){ callback(err); }
+    //         else{
+    //             // remove user from group
+    //             norm.table('GroupsUsers')
+    //                 .where('userId', '=', userId)
+    //                 .where('groupId', '=', groupId)
+    //                 .delete(callback);
+    //         }
+    //     });
 }
 
-function assignUser(userId, groupId, callback){
+function assignUser(userId, groupId, callbackIn){
 
-    norm.table('GroupsUsers')
+    // callbackIn(); return;
+    knex('groups_users')
         .insert({
-            'GroupId': groupId,
-            'UserId': userId
-        }, function(err){
-            if( err ){
-                if( err.code === 'ER_DUP_ENTRY' ){ callback(); }
-                else{ callback(err); }
-            } else { callback(); }
-        });
+            'group': groupId,
+            'user': userId
+        })
+        .then(function(){ callbackIn(); })
+        .catch(callbackIn)
+
+    // norm.table('GroupsUsers')
+    //     .insert({
+    //         'GroupId': groupId,
+    //         'UserId': userId
+    //     }, function(err){
+    //         if( err ){
+    //             if( err.code === 'ER_DUP_ENTRY' ){ callback(); }
+    //             else{ callback(err); }
+    //         } else { callback(); }
+    //     });
 }
 
 module.exports = groupModel;

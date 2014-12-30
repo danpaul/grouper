@@ -1,4 +1,10 @@
 
+- group.assignUser resulting in duplicate entry
+
+- move unasign/asign user into reasign transaction
+
+- make automic unasign into transaction
+
 - confirm limits when getting users, groups, etc. in seeding
 
 - redo schema
