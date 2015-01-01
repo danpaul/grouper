@@ -33,6 +33,7 @@ groupModel.assignUserToGroup = function(userId, groupId, callbackIn){
         // if( err.code === 'ER_DUP_ENTRY' ){ callback(); }
 }
 
+
 groupModel.assignUsersToGroups = function(groupIds, userIds, numberOfGroupsUserBelongsTo, callbackIn){
     var count;
     var currentGroup = 0;
