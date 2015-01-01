@@ -67,8 +67,6 @@ grouping.runTest = function(callbackIn){
         grouping.voteGroupCycle(userIds, groupIds, callback);
     }
 
-
-
     ], callbackIn)
 }
 

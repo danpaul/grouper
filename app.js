@@ -39,24 +39,9 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 var posts = require('./routes/posts');
 
-var voteTest = require('./test/vote');
-var grouping = require('./test/grouping.js');
+var test = require('./test/test');
 
-// voteTest.runTest(function(err){
-//     if(err){ console.log(err); }
-//     else{ console.log('sussess!'); }
-// });
-
-grouping.runTest(function(err){
-    if( err ){ console.log(err); }
-    else{
-        console.log('seeded');
-    }
-})
-
-
-
-
+test.runTest();
 
 
 
