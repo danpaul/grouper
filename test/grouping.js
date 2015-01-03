@@ -17,11 +17,11 @@ var voteModel = require('../models/vote');
 
 var settings = {
     numberOfGroups: 10, // should be at least 10
-    numberOfGroupsUserBelongsTo: 3,
+    numberOfGroupsUserBelongsTo: 2,
     numberOfPosts: 100, // should be at least 10
-    numberOfUsers: 1000, // should be at least 10
+    numberOfUsers: 100, // should be at least 10
     numberOfGroupings: 10,
-    numberOfGroupingsUserBelongsTo: 3,  
+    numberOfGroupingsUserBelongsTo: 2,  
     testBias: 0.4,
     numberOfCycles: 100
 }
