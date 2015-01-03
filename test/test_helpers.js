@@ -9,7 +9,7 @@ var userModel = require('../models/user');
 
 var testHelpers = {};
 
-testHelpers.createGroupsUsersPosts = function(numGroups, numUsers, numPosts, callbackIn){
+testHelpers.createGroupsUsers = function(numGroups, numUsers, callbackIn){
     var returnObj = {};
 
     async.waterfall([
@@ -31,12 +31,12 @@ testHelpers.createGroupsUsersPosts = function(numGroups, numUsers, numPosts, cal
         },
 
         // create posts
-        function(callback){
-            postModel.createSeedPosts(numPosts, returnObj['users'][0], function(err, postIdsIn){
-                if( err ){ callback(err); }
-                else{ returnObj.posts = postIdsIn; callback(); }
-            });
-        },
+        // function(callback){
+        //     postModel.createSeedPosts(numPosts, returnObj['users'][0], function(err, postIdsIn){
+        //         if( err ){ callback(err); }
+        //         else{ returnObj.posts = postIdsIn; callback(); }
+        //     });
+        // },
   
     ], function(err){
         if(err){ callbackIn(err); }

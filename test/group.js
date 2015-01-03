@@ -27,7 +27,7 @@ groupTest.runTest = function(callbackIn){
 
         // create groups, users, posts
         function(callback){
-            testHelpers.createGroupsUsersPosts(settings.numberOfGroups, settings.numberOfUsers, settings.numberOfPosts, function(err, seedDataIn){
+            testHelpers.createGroupsUsers(settings.numberOfGroups, settings.numberOfUsers, function(err, seedDataIn){
                 if(err){ callback(err); }
                 else{ seedData = seedDataIn; callback(); }
             })
@@ -39,17 +39,43 @@ groupTest.runTest = function(callbackIn){
         },
 
         // create groupings
-        function(callbackIn){
+        function(callback){
             groupings = createGroupings(seedData.users, settings.numberOfGroupings);
-            console.log(groupings)
-        }
+            callback();
+        },
 
-        // create posts
+        // cycle post votes until match
+        function(callback){
+            voteGroupCycle(seedData.users, seedData.groups, groupings, callback);
+        }
 
 
 
     ], callbackIn)
 }
+
+
+var voteGroupCycle = function(userIds, groupIds, groupings, callbackIn){
+
+    var groupUserMap;
+
+    async.waterfall([
+        function(callback){
+            groupModel.getUsersInGroup(groupIds, function(err, groupUserMapIn){
+                if(err){ callback(err); }
+                else{
+                    groupUserMap = groupUserMapIn;
+                    callback();
+                }
+            })
+        }
+
+    ], callbackIn)
+
+}
+
+
+
 
 // creates groupings in the "oposite" the way groupModel.assignUsersToGroups does
 // I.e. [[0, 1, 2], [3, 4, 5]] instead of [[0, 2, 4], [1, 3, 5]]

@@ -3,7 +3,6 @@
 /**
     Note: Grouping test should occur on an empty DB
 */
-
 var grouping = {};
 
 var _ = require('underscore');
@@ -19,13 +18,12 @@ var voteModel = require('../models/vote');
 var settings = {
     numberOfGroups: 10, // should be at least 10
     numberOfGroupsUserBelongsTo: 3,
-    numberOfPosts: 1000, // should be at least 10
-    numberOfUsers: 100, // should be at least 10
+    numberOfPosts: 100, // should be at least 10
+    numberOfUsers: 1000, // should be at least 10
     numberOfGroupings: 10,
     numberOfGroupingsUserBelongsTo: 3,  
     testBias: 0.4,
-    numberOfCycles: 100,
-    displayIndividualAverages: false
+    numberOfCycles: 100
 }
 
 grouping.runTest = function(callbackIn){
@@ -108,40 +106,56 @@ grouping.voteGroupCycle = function(userIds, groupIds, callbackIn){
     }, callbackIn)
 }
 
+var hasMatchingElement = function(arrayA, arrayB){
+    return(_.intersection(arrayA, arrayB).length > 0);
+}
+
+var getUsersInUsersGroupings = function(userGroupMap, userId){   
+
+    var usersInUsersGroupings = [];
+    var userGroupIndexes = userGroupMap[userId];
+
+    _.each(userGroupMap, function(groupIndexes, userId){
+        if( hasMatchingElement(userGroupIndexes, groupIndexes) ){
+            usersInUsersGroupings.push(parseInt(userId));
+        }
+    })
+
+    return _.uniq(usersInUsersGroupings);
+}
+
 grouping.displayGroupStatistics = function(userIds, userGroupMap, groupIds, callbackIn){
 
-    var indivdualAverages = [];
+    var totalAverages = 0.0;
 
-    // foreach user, get groups user belongs to
+    // foreach user
     async.eachSeries(userIds, function(userId, callback){
 
-        // foreach group, if user belongs, userBelongs get increment
+        // get users in users groupings
+        var usersInUsersGroupings = getUsersInUsersGroupings(userGroupMap, userId);
+
+        // get groups user belongs to
         userModel.getGroups(userId, function(err, groupsUserBelongsTo){
             if( err ){ callback(err); }
             else{
-                // get the groups in the user's groupings
-                var usersGroupings = userGroupMap[userId].map(function(groupIndex){ return groupIds[groupIndex]; });
-                var matchedGroups = 0;
 
-                // groupseUserBelongs
-                groupsUserBelongsTo.forEach(function(userGroup){
-                    if( _.contains(usersGroupings, userGroup) ){ matchedGroups += 1; }
-                })
-                var userAverage = matchedGroups / groupsUserBelongsTo.length;                
+                // get users in user's groups
+                groupModel.getUsersInGroups(groupsUserBelongsTo, false, function(err, usersInUsersGroups){
+                    if(err){ callback(err); }
+                    else{
 
-                if( settings.displayIndividualAverages ){
-                    console.log('User ' + userId + ' averages: ' + userAverage );
-                }
-                indivdualAverages.push(userAverage);
+                        // determine how many users in both groups
+                        var numUsersInBothGroups = _.intersection(usersInUsersGroupings, usersInUsersGroups).length;
+                        totalAverages += (numUsersInBothGroups / usersInUsersGroupings.length);
+                        callback();
+                    }
+                });
             }
-            callback();
         })
     }, function(err){
         if( err ){ callbackIn(err); }
         else{
-            var total = 0;
-            indivdualAverages.forEach(function(avg){ total += avg; });
-            var average = total / indivdualAverages.length;
+            var average = totalAverages / userIds.length;
             console.log('Total average: ' +  average);
             callbackIn();
         }
@@ -199,7 +213,6 @@ grouping.createGroupings = function(userIds, numberOfGroupings, numberOfGrouping
             })
         }
     });
-
     return userGroupMap;
 }
 

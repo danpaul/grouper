@@ -18,8 +18,9 @@
             test.emptyDatabase,
             // voteTest.runTest,
             // test.emptyDatabase,
-            groupTest.runTest,
-            test.emptyDatabase
+            groupingTest.runTest,
+            // groupTest.runTest,
+            // test.emptyDatabase
         ], function(err){
             if(err){ console.log(err); }
             else{ console.log('grouper tests passed'); }

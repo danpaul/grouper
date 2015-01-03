@@ -79,6 +79,28 @@ groupModel.createSeedGroups = function(numberOfGroups, callbackIn){
     })
 }
 
+
+// Takes array of group Ids
+// Takes returnMap flag
+// Returns an object with groupId as key and array of userIds as value if returnMap is false
+// else, returns an array of user ids
+groupModel.getUsersInGroups = function(groupIds, returnMap, callbackIn){
+    knex('groups_users')
+        .select(['user', 'group'])
+        .whereIn('group', groupIds)
+        .then(function(userGroups){
+            if( returnMap ){
+
+            }else{
+                userIds = _.uniq(_.flatten(_.map(userGroups, function(userGroup){
+                    return userGroup.user;
+                })));
+                callbackIn(null, userIds);
+            }
+        })
+        .catch(callbackIn)
+}
+
 groupModel.updateGroupVote = function(groupId, postId, vote, callbackIn){
     var queryObj = voteModel.getMultiKeyVoteQuery( 'group_votes', 'post', postId, 'group', groupId, vote);
     knex.raw(queryObj.statement, queryObj.params)
