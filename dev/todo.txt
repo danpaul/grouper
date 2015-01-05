@@ -1,4 +1,9 @@
 
+- start iterative testing of group/grouping functions
+    + see which settings lead to the quickest grouping based on params
+
+- test bias below .4 seems to not be grouping? - works slowly at .3
+
 - group.assignUser resulting in duplicate entry
 
 - move unasign/asign user into reasign transaction
@@ -6,19 +11,6 @@
 - make automic unasign into transaction
 
 - confirm limits when getting users, groups, etc. in seeding
-
-- redo schema
-    + all lowercase tables
-    + no "ids" in table names
-    + better indexes
-    + no unecessary fields
-    + no foreign keys
-
-- redo norm
-    + make as a query builder
-    + each operation adds to query and params
-    + use exec to execute the query or getQuery to get mysql string
-
 
 
 - make postGroupVote primary key postid + group id
