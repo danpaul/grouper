@@ -8,23 +8,27 @@ var constants = require('../constants.js');
 var testHelpers = require('./test_helpers.js');
 
 var groupModel = require('../models/group');
+var postModel = require('../models/post');
+var userModel = require('../models/user');
+var voteModel = require('../models/vote');
 
 var groupTest = {};
 
 var settings = {
-    numberOfUsers: 9,
-    numberOfGroups: 3,
-    numberOfGroupings: 3,
-    numberOfPosts: 10
+    numberOfCycles: 10,
+    numberOfUsers: 100,
+    numberOfGroups: 10,
+    numberOfGroupings: 10,
+    numberOfPosts: 100,
+    testBias: 0.2
 }
 
 groupTest.runTest = function(callbackIn){
-
     var seedData;
     var groupings;
-
     async.waterfall([
-
+        // empty database
+        testHelpers.emptyDatabase,
         // create groups, users, posts
         function(callback){
             testHelpers.createGroupsUsers(settings.numberOfGroups, settings.numberOfUsers, function(err, seedDataIn){
@@ -32,50 +36,116 @@ groupTest.runTest = function(callbackIn){
                 else{ seedData = seedDataIn; callback(); }
             })
         },
-
         // assign users to groups
         function(callback){
             groupModel.assignUsersToGroups(seedData.groups, seedData.users, 1, callback);
         },
-
-        // create groupings
+        // vote cycle
         function(callback){
-            groupings = createGroupings(seedData.users, settings.numberOfGroupings);
-            callback();
-        },
-
-        // cycle post votes until match
-        function(callback){
-            voteGroupCycle(seedData.users, seedData.groups, groupings, callback);
+            voteGroupCycle(seedData.users, seedData.groups, settings.numberOfGroupings, settings.numberOfCycles, settings.numberOfPosts, callback);
         }
-
-
-
     ], callbackIn)
 }
 
 
-var voteGroupCycle = function(userIds, groupIds, groupings, callbackIn){
+var voteGroupCycle = function(userIds, groupIds, numberOfGroupings, numberOfCycles, numberOfPosts, callbackIn){
 
-    var groupUserMap;
+    // create groupings
+    var groupings = createGroupings(userIds, numberOfGroupings);
 
-    async.waterfall([
-        function(callback){
-            groupModel.getUsersInGroup(groupIds, function(err, groupUserMapIn){
-                if(err){ callback(err); }
-                else{
-                    groupUserMap = groupUserMapIn;
-                    callback();
-                }
-            })
+    // // foreach cycle
+    async.eachSeries(_.range(settings.numberOfCycles), function(number, callback){
+        var postIds = [];
+
+        async.waterfall([
+
+            // create new posts
+            function(callbackB){
+                postModel.createSeedPosts(numberOfPosts, userIds[0], function(err, postIdsIn){
+                    if( err ){ callbackB(err); }
+                    else{ postIds = postIdsIn; callbackB(); }
+                });
+            },
+            // have all users vote
+            function(callbackB){
+                voteCycle(userIds, postIds, groupings, callbackB);
+            },
+            // // group users based on their votes
+            function(callbackB){
+                groupModel.groupUsers(groupIds, callbackB);
+            },            
+            // // display grouping statistics
+            function(callbackB){
+                var statistics = getGroupStatistics(userIds, groupIds, groupings, callbackB);
+            }
+
+        ], callback)
+    }, callbackIn)
+}
+
+getGroupStatistics = function(userIds, groupIds, groupings, callbackIn){
+    var totalAverages = 0.0;
+    // foreach user
+    async.eachSeries(userIds, function(userId, callback){
+        var usersInUsersGrouping;
+
+        // find other users in this users groupings
+        _.each(groupings, function(grouping){
+            if( _.contains(grouping, userId) ){
+                usersInUsersGrouping = grouping;
+            }
+        })
+
+        // get groups user belongs to
+        userModel.getGroups(userId, function(err, groupsUserBelongsTo){
+            if( err ){ callback(err); }
+            else{
+                // get users in user's groups
+                groupModel.getUsersInGroups(groupsUserBelongsTo, false, function(err, usersInUsersGroup){
+
+                    if(err){ callback(err); }
+                    else{
+                        var numUsersInBothGroups = _.intersection(usersInUsersGrouping, usersInUsersGroup).length;
+                        totalAverages += (numUsersInBothGroups / usersInUsersGrouping.length);
+                        callback();
+                    }
+                });
+            }
+        })
+    }, function(err){
+        if( err ){ callbackIn(err); }
+        else{
+            var average = totalAverages / userIds.length;
+            console.log('Total average: ' +  average);
+            callbackIn();
         }
-
-    ], callbackIn)
-
+    });
 }
 
 
 
+// runs through a single vote cycle for a group of posts
+// groupins are a 2d array of userIDs, user should tend to agree with users in their groupings
+var voteCycle = function(userIds, postIds, groupings, callbackIn){
+    // // foreach post
+    async.eachSeries(postIds, function(postId, callback){
+        //shuffle groupings
+        var shuffledGroupings = _.shuffle(groupings);
+        // foreach grouping
+        async.eachSeries(shuffledGroupings, function(grouping, callbackB){
+            // shuffle users
+            var shuffledUsers = _.shuffle(grouping)
+            // determine bias
+            var bias = voteModel.getRandomBias(settings.testBias);
+            //foreach user
+            async.eachSeries(shuffledUsers, function(userId, callbackC){
+                // cast vote
+                var vote = voteModel.getVoteFromBias(bias);
+                userModel.castVote(userId, postId, vote, callbackC);
+            }, callbackB)
+        }, callback);
+    }, callbackIn);
+}
 
 // creates groupings in the "oposite" the way groupModel.assignUsersToGroups does
 // I.e. [[0, 1, 2], [3, 4, 5]] instead of [[0, 2, 4], [1, 3, 5]]
@@ -102,7 +172,6 @@ var createGroupings = function(userIds, numberOfGroupings){
         })
         groupingIndex++;
     })
-
     return groupings;
 }
 

@@ -12,12 +12,12 @@ var voteModel = require('./vote');
 
 var settings = {
     // groupsToCompareUser: 2,
-    maximumGroupsToCompare: 10,
+    maximumGroupsToCompare: 3,
     minimumGroupVotesToCompare: 10,
     minimumVotesToIncludeInSort: 1,
     minimumVotesToDoUserComparison: 10,
-    percentUsersToRegroup: 0.3,
-    userPostVotesToCompare: 50,
+    percentUsersToRegroup: 0.5,
+    userPostVotesToCompare: 20,
 }
 
 groupModel.add = function(groupData, callbackIn){

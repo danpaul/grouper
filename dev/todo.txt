@@ -1,4 +1,20 @@
 
+
+- create DB clear function
+
+- create dynamic test, see which settings in regroup function lead to fastest regrouping with smallest bias 
+
+- write group grouping function/test?
+	+ this could be a cron the periodically checkes/rates each group against every other group
+
+- setup user que system, ignnore old posts
+
+- setup post/decay system
+
+- pereodically try to regroup users with high level of agreement
+
+
+
 - start iterative testing of group/grouping functions
     + see which settings lead to the quickest grouping based on params
 

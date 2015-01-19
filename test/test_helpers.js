@@ -2,6 +2,9 @@
 
 var _ = require('underscore');
 var async = require('async');
+var knex = global.grouper_app.get('GROUPER_KNEX');
+
+var constants = require('../constants')
 
 var groupModel = require('../models/group');
 var postModel = require('../models/post');
@@ -43,6 +46,17 @@ testHelpers.createGroupsUsers = function(numGroups, numUsers, callbackIn){
         else{ callbackIn(null, returnObj); }
     });
 
+}
+
+testHelpers.emptyDatabase = function(callbackIn){
+    async.each(constants.databaseTables, testHelpers.clearTable, callbackIn);
+}
+
+testHelpers.clearTable = function(table, callbackIn){
+        knex(table)
+            .truncate()
+            .then(function(){ callbackIn(); })
+            .catch(callbackIn)
 }
 
 module.exports = testHelpers;

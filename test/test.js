@@ -27,16 +27,16 @@
         })
     }
 
-    test.emptyDatabase = function(callbackIn){
-        async.each(constants.databaseTables, test.clearTable, callbackIn);
-    }
+    // test.emptyDatabase = function(callbackIn){
+    //     async.each(constants.databaseTables, test.clearTable, callbackIn);
+    // }
 
-    test.clearTable = function(table, callbackIn){
-            knex(table)
-                .truncate()
-                .then(function(){ callbackIn(); })
-                .catch(callbackIn)
-    }
+    // test.clearTable = function(table, callbackIn){
+    //         knex(table)
+    //             .truncate()
+    //             .then(function(){ callbackIn(); })
+    //             .catch(callbackIn)
+    // }
 
     module.exports = test;
 
