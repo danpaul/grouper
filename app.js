@@ -43,7 +43,7 @@ var posts = require('./routes/posts');
 // test.runTest();
 
 var groupTest = require('./test/group');
-groupTest.runTest(function(err){
+groupTest.runTests(function(err){
     if(err){ console.log(err) }
     else{ console.log('success'); }
 });

@@ -15,15 +15,15 @@ var voteModel = require('../models/vote');
 var groupTest = {};
 
 var settings = {
-    numberOfCycles: 100,
-    numberOfUsers: 100,
-    numberOfGroups: 10,
-    numberOfGroupings: 10,
-    numberOfPosts: 100,
-    testBias: 0.2
+    numberOfCycles: 20,
+    numberOfUsers: 20,
+    numberOfGroups: 3,
+    numberOfGroupings: 3,
+    numberOfPosts: 20,
+    testBias: 0.4
 }
 
-groupTest.runTest = function(callbackIn){
+groupTest.runTest = function(groupingSettings, callbackIn){
     var seedData;
     var groupings;
     async.waterfall([
@@ -42,13 +42,43 @@ groupTest.runTest = function(callbackIn){
         },
         // vote cycle
         function(callback){
-            voteGroupCycle(seedData.users, seedData.groups, settings.numberOfGroupings, settings.numberOfCycles, settings.numberOfPosts, callback);
+            voteGroupCycle(seedData.users, seedData.groups, settings.numberOfGroupings, settings.numberOfCycles, settings.numberOfPosts, groupingSettings, callback);
         }
     ], callbackIn)
 }
 
+groupTest.runTests = function(callback){
 
-var voteGroupCycle = function(userIds, groupIds, numberOfGroupings, numberOfCycles, numberOfPosts, callbackIn){
+
+    var groupingSettings = {
+
+        // when regrouping user, at most, this many groups will be checked
+        maximumGroupsToCompare: 3,
+
+        // If there are less than this many posts that both the user and the group
+        //  have voted on, the user will not be compared with the group
+        minimumGroupVotesToCompare: 10,
+
+        // If the user has less than this many votes with a particular group, they
+        //  can not be regrouped    
+        minimumVotesToIncludeInSort: 1,
+
+        // User must have at least this many votes to do a comparison
+        minimumVotesToDoUserComparison: 10,
+
+        // percentage of users in a group to regroup
+        percentUsersToRegroup: 0.5,
+
+        // maximum number of user votes that will get compared    
+        userPostVotesToCompare: 20,
+    }
+
+    groupTest.runTest(groupingSettings, callback);
+
+}
+
+
+var voteGroupCycle = function(userIds, groupIds, numberOfGroupings, numberOfCycles, numberOfPosts, groupingSettings, callbackIn){
 
     // create groupings
     var groupings = createGroupings(userIds, numberOfGroupings);
@@ -72,7 +102,7 @@ var voteGroupCycle = function(userIds, groupIds, numberOfGroupings, numberOfCycl
             },
             // group users based on their votes
             function(callbackB){
-                groupModel.groupUsers(groupIds, callbackB);
+                groupModel.groupUsers(groupingSettings, groupIds, callbackB);
             },            
             // // display grouping statistics
             function(callbackB){

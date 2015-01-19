@@ -10,16 +10,7 @@ var constants = require('../constants');
 var knex = global.grouper_app.get('GROUPER_KNEX');
 var voteModel = require('./vote');
 
-var defaultSettings = {
-    // when regrouping user, at most, this many groups will be checked
-    maximumGroupsToCompare: 3,
 
-    minimumGroupVotesToCompare: 10,
-    minimumVotesToIncludeInSort: 1,
-    minimumVotesToDoUserComparison: 10,
-    percentUsersToRegroup: 0.5,
-    userPostVotesToCompare: 20,
-}
 
 groupModel.add = function(groupData, callbackIn){
     baseModel.add('groups', {}, callbackIn);
@@ -163,13 +154,41 @@ GROUPING FUNCTIONS
 
 // main grouping function, regroups users based on their agreement/disagreement
 //  with other group's users
-groupModel.groupUsers = function(groupIds, callbackIn){
+//
+// Takes the following settings:
+/*
+    settings = {
+
+        // when regrouping user, at most, this many groups will be checked
+        maximumGroupsToCompare: 3,
+
+        // If there are less than this many posts that both the user and the group
+        //  have voted on, the user will not be compared with the group
+        minimumGroupVotesToCompare: 10,
+
+
+        // If the user has less than this many votes with a particular group, they
+        //  can not be regrouped    
+        minimumVotesToIncludeInSort: 1,
+
+
+        // User must have at least this many votes to do a comparison
+        minimumVotesToDoUserComparison: 10,
+
+        // percentage of users in a group to regroup
+        percentUsersToRegroup: 0.5,
+
+        // maximum number of user votes that will get compared    
+        userPostVotesToCompare: 20,
+    }
+*/
+groupModel.groupUsers = function(settings, groupIds, callbackIn){
     async.eachSeries(groupIds, function(groupId, callback){
-        processGroup(groupId, callback);
+        processGroup(settings, groupId, callback);
     }, callbackIn);
 }
 
-function findGroupsUserDoesntBelongTo(userId, callbackIn){
+function findGroupsUserDoesntBelongTo(settings, userId, callbackIn){
 
     // find groups user does belong to
     knex('groups_users')
@@ -198,7 +217,7 @@ function userAgrees( userVote, percentageGroupUpVotes ){
 }
 
 // compares users votes on a set of posts with a groups
-function compareVotes(groupId, postVotes, postVoteIds, callbackIn){
+function compareVotes(settings, groupId, postVotes, postVoteIds, callbackIn){
     //get group votes for posts user voted for
     knex('group_votes')
         .select(['percentage_up', 'total', 'post'])
@@ -224,10 +243,10 @@ function compareVotes(groupId, postVotes, postVoteIds, callbackIn){
         .catch(callbackIn)
 }
 
-function compareUserWithAlternateGroups(userId, userVotes, callback){
+function compareUserWithAlternateGroups(settings, userId, userVotes, callback){
 
     // find X number of groups user does not belong to
-    findGroupsUserDoesntBelongTo(userId, function(err, groupIds){
+    findGroupsUserDoesntBelongTo(settings, userId, function(err, groupIds){
 
         if(err){ callback(err); }
         else{
@@ -243,7 +262,7 @@ function compareUserWithAlternateGroups(userId, userVotes, callback){
                 });
 
                 async.eachSeries(groupIds, function(groupId, callback_b){
-                    compareVotes(groupId, postVotes, postVoteIds, function(err, percentage){
+                    compareVotes(settings, groupId, postVotes, postVoteIds, function(err, percentage){
                         if( err ){ callback_b(err); }
                         else{
                             if( percentage !== null ){
@@ -267,19 +286,16 @@ function compareUserWithAlternateGroups(userId, userVotes, callback){
 
 
 // user agreements are records with user id and percentage of agreement with group
-function processUsers(userAgreements, groupId, callbackIn){
+function processUsers(settings, userAgreements, groupId, callbackIn){
 
     // for each user agreement
     async.eachSeries(userAgreements, function(agreement, callback){
         // see if there are other groups user has higher agreement with
-        processUser(agreement.user, groupId, function(err, newAgreements){
+        processUser(settings, agreement.user, groupId, function(err, newAgreements){
             if(err){ callback(err); }
             else{
-// console.log('hhhh');
-// console.log(newAgreements);
                 if( newAgreements.length < 1 ){ callback(); }
                 else{
-// console.log('cccc');
                     regroupUser(
                         agreement.user,
                         groupId,
@@ -294,11 +310,9 @@ function processUsers(userAgreements, groupId, callbackIn){
         if(err){ callbackIn(err); }
         else{ callbackIn(); }
     });
-
-
 }
 
-function processUser(userId, groupId, callbackIn){
+function processUser(settings, userId, groupId, callbackIn){
     // find X number of user posts to compare to other groups vote's
     knex('user_votes')
         .select(['vote', 'post', 'created'])
@@ -308,7 +322,7 @@ function processUser(userId, groupId, callbackIn){
         .then(function(userVotes){
             //check if user has enough votes to compare
             if( userVotes.length > settings.minimumVotesToDoUserComparison ){
-                compareUserWithAlternateGroups(userId, userVotes, callbackIn);
+                compareUserWithAlternateGroups(settings, userId, userVotes, callbackIn);
             } else {
                 callbackIn(null, []);
             }
@@ -316,7 +330,11 @@ function processUser(userId, groupId, callbackIn){
         .catch(callbackIn)
 }
 
-function processGroup(groupId, callbackIn){
+// Main function for processing and individual group.
+// Function finds all users in group, then takes the users with the lowest
+//  agreement and attempts to find, and regroup to, groups the users has
+//  a higher agreement with.
+function processGroup(settings, groupId, callbackIn){
 
     var numberOfUsersInGroup;
     var userAgreements;
@@ -355,37 +373,9 @@ function processGroup(groupId, callbackIn){
         // try to find groups that user may have more agreements with
         //   and regroup user
         function(callback){
-            processUsers(userAgreements, groupId, callback);
+            processUsers(settings, userAgreements, groupId, callback);
         }
 
-
-
-
-        // try to find groups that user may have more agreements with
-        //   and regroup user
-        // function(agreements, callback){
-        //     async.eachSeries(agreements, function(agreement, agreementCallback){
-        //         processUser(agreement.user, groupId, function(err, newAgreements){
-        //             if(err){ agreementCallback(err); }
-        //             else{
-        //                 if( newAgreements.length < 1 ){ agreementCallback(); }
-        //                 else{
-
-        //                     regroupUser(
-        //                         agreement.user,
-        //                         groupId,
-        //                         agreement.percentageUp,
-        //                         newAgreements,
-        //                         agreementCallback
-        //                     );
-        //                 }
-        //             }
-        //         });
-        //     }, function(err){
-        //         if(err){ callback(err); }
-        //         else{ callback(); }
-        //     });
-        // }
     ], callbackIn);
 }
 
@@ -396,24 +386,11 @@ function regroupUser(
             newGroupAgreements,
             callback){
 
-// console.log(currentGroupAgreement);
-// console.log(newGroupAgreements);
-// return;
-
     // sort newGroupAgreements
     newGroupAgreements.sort(function(a, b){
         return(b.agreePercentage - a.agreePercentage);
     });
 
-// console.log(newGroupAgreements);
-// return
-
-// console.log(newGroupAgreements[0]['agreePercentage']);
-// console.log(currentGroupAgreement);
-
-    // if agreement with new group is higher, unassign from old, reasign to new
-// console.log(newGroupAgreements);
-// console.log(userId); return;
     if( newGroupAgreements[0]['agreePercentage'] > currentGroupAgreement ){
         unasignUser(userId, currentGroupId, function(err){
             if(err){ callback(err) }
@@ -449,22 +426,6 @@ function unasignUser(userId, groupId, callbackIn){
                 .catch(callbackIn)
         })
         .catch(callbackIn)
-
-
-    // remove user group agreements
-    // norm.table('UserGroupAgreements')
-    //     .where('user', '=', userId)
-    //     .where('group', '=', groupId)
-    //     .delete(function(err){
-    //         if( err ){ callback(err); }
-    //         else{
-    //             // remove user from group
-    //             norm.table('GroupsUsers')
-    //                 .where('userId', '=', userId)
-    //                 .where('groupId', '=', groupId)
-    //                 .delete(callback);
-    //         }
-    //     });
 }
 
 function assignUser(userId, groupId, callbackIn){
@@ -477,17 +438,6 @@ function assignUser(userId, groupId, callbackIn){
         })
         .then(function(){ callbackIn(); })
         .catch(callbackIn)
-
-    // norm.table('GroupsUsers')
-    //     .insert({
-    //         'GroupId': groupId,
-    //         'UserId': userId
-    //     }, function(err){
-    //         if( err ){
-    //             if( err.code === 'ER_DUP_ENTRY' ){ callback(); }
-    //             else{ callback(err); }
-    //         } else { callback(); }
-    //     });
 }
 
 module.exports = groupModel;
