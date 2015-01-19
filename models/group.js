@@ -10,9 +10,10 @@ var constants = require('../constants');
 var knex = global.grouper_app.get('GROUPER_KNEX');
 var voteModel = require('./vote');
 
-var settings = {
-    // groupsToCompareUser: 2,
+var defaultSettings = {
+    // when regrouping user, at most, this many groups will be checked
     maximumGroupsToCompare: 3,
+
     minimumGroupVotesToCompare: 10,
     minimumVotesToIncludeInSort: 1,
     minimumVotesToDoUserComparison: 10,
@@ -156,13 +157,12 @@ groupModel.updateUsersGroupVotes = function(userId, postId, vote, callbackIn){
     ], callbackIn);
 }
 
-
-
 /********************************************************************************
 GROUPING FUNCTIONS
 ********************************************************************************/
 
-
+// main grouping function, regroups users based on their agreement/disagreement
+//  with other group's users
 groupModel.groupUsers = function(groupIds, callbackIn){
     async.eachSeries(groupIds, function(groupId, callback){
         processGroup(groupId, callback);
@@ -180,7 +180,6 @@ function findGroupsUserDoesntBelongTo(userId, callbackIn){
             // find groups user is not in
             knex('groups')
                 .select(['id'])
-                // .where('user', '!=', userId)
                 .whereNotIn('id', groupIds)
                 .then(function(groupObjs){
                     var groups = _.shuffle(_.pluck(groupObjs, 'id'))
@@ -190,20 +189,6 @@ function findGroupsUserDoesntBelongTo(userId, callbackIn){
                 .catch(callbackIn)
         })
         .catch(callbackIn)
-
-
-// console.log(userId);
-//     knex('groups_users')
-//         .select(['group'])
-//         // .where('user', '!=', userId)
-//         .whereNotIn('user', [userId])
-//         .then(function(userGroups){
-// // console.log(userGroups); return;
-//             var groups = _.shuffle(_.pluck(userGroups, 'group'))
-//                 .slice(0, settings.maximumGroupsToCompare);
-//             callbackIn(null, groups);
-//         })
-//         .catch(callbackIn)
 }
 
 function userAgrees( userVote, percentageGroupUpVotes ){
@@ -214,40 +199,25 @@ function userAgrees( userVote, percentageGroupUpVotes ){
 
 // compares users votes on a set of posts with a groups
 function compareVotes(groupId, postVotes, postVoteIds, callbackIn){
-// console.log(postVoteIds);
     //get group votes for posts user voted for
     knex('group_votes')
         .select(['percentage_up', 'total', 'post'])
         .where('group', groupId)
         .whereIn('post', postVoteIds)
         .then(function(groupVotes){
-// console.log(groupVotes);
-// return;
             if( groupVotes < settings.minimumGroupVotesToCompare ){
                 callbackIn(null, 0.0);
             } else {
-// console.log('else');
                 var agreedVotes = 0;
                 var totalVotes = 0;
                 groupVotes.forEach(function(agreement){
                     totalVotes += 1;
-
-                    // user vote
-                    // var uv = postVotes[agreement.postId];
                     var uv = postVotes[agreement.post];
-// console.log('user')
-// console.log(postVotes[agreement.post]);
-                    // group vote perentage
                     var gvp = agreement.percentage_up;
-// console.log('group')
-// console.log(gvp)
                     if( userAgrees(uv, gvp) ){
                         agreedVotes += 1;
                     }
                 });
-// console.log(agreedVotes)
-// console.log(totalVotes)
-// return;
                 callbackIn(null, (agreedVotes / totalVotes));
             }
         })
@@ -336,7 +306,6 @@ function processUser(userId, groupId, callbackIn){
         .orderBy('created', 'desc')
         .limit(settings.userPostVotesToCompare)
         .then(function(userVotes){
-// console.log(userVotes.length); return;
             //check if user has enough votes to compare
             if( userVotes.length > settings.minimumVotesToDoUserComparison ){
                 compareUserWithAlternateGroups(userId, userVotes, callbackIn);
@@ -345,25 +314,6 @@ function processUser(userId, groupId, callbackIn){
             }
         })
         .catch(callbackIn)
-
-
-    // find X number user posts
-    // norm.table('UserVotes')
-    //     .where('user', '=', userId)
-    //     .select(['vote', 'post'])
-    //     .orderDesc('id')
-    //     .limit(settings.userPostVotesToCompare)
-    //     .findAll(function(err, userVotes){
-    //         if(err){ callbackIn(err); }
-    //         else{
-    //             //check if user has enough votes to compare
-    //             if( userVotes.length > settings.minimumVotesToDoUserComparison ){
-    //                 compareUserWithAlternateGroups(userId, userVotes, callbackIn);
-    //             } else {
-    //                 callbackIn();
-    //             }
-    //         }
-    //     })
 }
 
 function processGroup(groupId, callbackIn){

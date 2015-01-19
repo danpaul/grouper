@@ -15,7 +15,7 @@ var voteModel = require('../models/vote');
 var groupTest = {};
 
 var settings = {
-    numberOfCycles: 10,
+    numberOfCycles: 100,
     numberOfUsers: 100,
     numberOfGroups: 10,
     numberOfGroupings: 10,
@@ -70,7 +70,7 @@ var voteGroupCycle = function(userIds, groupIds, numberOfGroupings, numberOfCycl
             function(callbackB){
                 voteCycle(userIds, postIds, groupings, callbackB);
             },
-            // // group users based on their votes
+            // group users based on their votes
             function(callbackB){
                 groupModel.groupUsers(groupIds, callbackB);
             },            
