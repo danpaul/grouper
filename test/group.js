@@ -3,6 +3,7 @@
 var _ = require('underscore');
 var async = require('async');
 var assert = require('assert');
+var fs = require('fs');
 
 var constants = require('../constants.js');
 var testHelpers = require('./test_helpers.js');
@@ -15,7 +16,7 @@ var voteModel = require('../models/vote');
 var groupTest = {};
 
 var settings = {
-    numberOfCycles: 20,
+    numberOfCycles: 5,
     numberOfUsers: 20,
     numberOfGroups: 3,
     numberOfGroupings: 3,
@@ -42,13 +43,27 @@ groupTest.runTest = function(groupingSettings, callbackIn){
         },
         // vote cycle
         function(callback){
-            voteGroupCycle(seedData.users, seedData.groups, settings.numberOfGroupings, settings.numberOfCycles, settings.numberOfPosts, groupingSettings, callback);
+            voteGroupCycle(
+                seedData.users,
+                seedData.groups,
+                settings.numberOfGroupings,
+                settings.numberOfCycles,
+                settings.numberOfPosts,
+                groupingSettings,
+                function(err, averages){
+                    if(err){ callback(err) }
+                    else{ callback(null, averages); }
+                });
         }
-    ], callbackIn)
+    ], function(err, averages){
+        if(err){ callbackIn(err) }
+        else{ callbackIn(null, averages); }
+    })
 }
 
-groupTest.runTests = function(callback){
+groupTest.runTests = function(callbackIn){
 
+    var statsArray = [];
 
     var groupingSettings = {
 
@@ -73,22 +88,72 @@ groupTest.runTests = function(callback){
         userPostVotesToCompare: 20,
     }
 
-    groupTest.runTest(groupingSettings, callback);
+    async.eachSeries(_.range(1, 11), function(number, callback){
+        var percentToRegroup = number / 10;
+        groupingSettings.percentUsersToRegroup = percentToRegroup;
 
+        groupTest.runTest(groupingSettings, function(err, stats){
+            if(err){callbackIn(err)}
+            else{
+                // add percent to regroup to stats array
+                // add stat to global array
+                _.each(stats, function(stat){
+                    stat.push(percentToRegroup);
+                    statsArray.push(stat);
+                })
+                callback();
+            }
+        });        
+    }, function(err){
+        if(err){ callbackIn(err); }
+        else{
+            var data = getStatsCsv(statsArray);
+
+            // write data to file
+            fs.writeFile("./data/results.csv", data, function(err) {
+                if(err) {
+                    console.log(err);
+                } else {
+                    console.log("Test data saved");
+                }
+            });
+        }
+    })
 }
 
+
+
+
+var getStatsCsv = function(statsArray){
+    var csv = '';
+    _.each(statsArray, function(stat){
+        var first = true;
+        _.each(stat, function(element){
+            if( first ){
+                first = false;
+                csv += element;
+            } else {
+                csv += ', ' + element;
+            }
+        })
+        csv += "\n";
+    })
+    return csv;
+}
 
 var voteGroupCycle = function(userIds, groupIds, numberOfGroupings, numberOfCycles, numberOfPosts, groupingSettings, callbackIn){
 
     // create groupings
     var groupings = createGroupings(userIds, numberOfGroupings);
+    var cycleNumber = 0;
+    var groupAverages  = [];
 
     // // foreach cycle
     async.eachSeries(_.range(settings.numberOfCycles), function(number, callback){
         var postIds = [];
+        cycleNumber++;
 
         async.waterfall([
-
             // create new posts
             function(callbackB){
                 postModel.createSeedPosts(numberOfPosts, userIds[0], function(err, postIdsIn){
@@ -106,11 +171,25 @@ var voteGroupCycle = function(userIds, groupIds, numberOfGroupings, numberOfCycl
             },            
             // // display grouping statistics
             function(callbackB){
-                var statistics = getGroupStatistics(userIds, groupIds, groupings, callbackB);
+                getGroupStatistics(userIds, groupIds, groupings, function(err, totalAverage){
+                    if(err){ callbackB(err); }
+                    else{
+                        groupAverages.push([cycleNumber, totalAverage]);
+                        callbackB();
+                    }
+                });
             }
-
-        ], callback)
-    }, callbackIn)
+        ], function(err){
+            if(err){ callback(err); }
+            else{
+                callback()
+            }
+        })
+    // }, callbackIn)
+    }, function(err){
+        if(err){ callbackIn(err); }
+        else{ callbackIn(null, groupAverages); }
+    })
 }
 
 getGroupStatistics = function(userIds, groupIds, groupings, callbackIn){
@@ -147,7 +226,7 @@ getGroupStatistics = function(userIds, groupIds, groupings, callbackIn){
         else{
             var average = totalAverages / userIds.length;
             console.log('Total average: ' +  average);
-            callbackIn();
+            callbackIn(null, average);
         }
     });
 }

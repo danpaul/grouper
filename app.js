@@ -39,9 +39,6 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 var posts = require('./routes/posts');
 
-// var test = require('./test/test');
-// test.runTest();
-
 var groupTest = require('./test/group');
 groupTest.runTests(function(err){
     if(err){ console.log(err) }
