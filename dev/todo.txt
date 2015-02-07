@@ -1,5 +1,8 @@
+- group_votes and posts should have ranking
 
 - order groups
+
+- add weithed score to posts
 
 - develop ranking system
 
@@ -7,7 +10,7 @@
 
 - develop spam check
 
-- 
+- split/merge groups
 
 
 
@@ -74,6 +77,7 @@
     + userGroupAgreements user id group id
         - maybe total (small totals get excluded when regrouping)
     + total votes in userGroupAgreements
+    + percentage up may note need index (if replacing with score)? see what ranker function needs
 
 - find way to pass argument to require
 

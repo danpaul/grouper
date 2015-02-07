@@ -71,6 +71,17 @@ groupModel.createSeedGroups = function(numberOfGroups, callbackIn){
     })
 }
 
+// passes back an array of all groupIds
+groupModel.getAllGroupIds = function(callbackIn){
+    knex('groups')
+        .select(['id'])
+        .then(function(rows){
+            var groupIds = _.map(rows, function(row){ return row.id; })
+            callbackIn(null, groupIds);
+        })
+        .catch(callbackIn)
+}
+
 
 // Takes array of group Ids
 // Takes returnMap flag

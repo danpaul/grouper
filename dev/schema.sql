@@ -26,7 +26,9 @@ CREATE TABLE IF NOT EXISTS `group_votes` (
   `down` int(11) DEFAULT '0',
   `total` int(11) DEFAULT '0',
   `percentage_up` float DEFAULT '0',
-  PRIMARY KEY (`post`, `group`)
+  `rank` float DEFAULT '1',
+  PRIMARY KEY (`post`, `group`),
+  INDEX(`rank`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
@@ -40,12 +42,14 @@ CREATE TABLE IF NOT EXISTS `posts` (
   `down` int(11) DEFAULT '0',
   `total` int(11) DEFAULT '0',
   `percentage_up` float DEFAULT '0',
+  `rank` float DEFAULT '1',
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
   INDEX(`user`),
   INDEX(`total`),
   INDEX(`percentage_up`),
-  INDEX(`created`)
+  INDEX(`created`),
+  INDEX(`rank`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
@@ -89,4 +93,13 @@ CREATE TABLE IF NOT EXISTS `user_votes` (
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`user`, `post`),
   INDEX(`created`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `group_agreements` (
+  `group_a` int(11) DEFAULT NULL,
+  `group_b` int(11) DEFAULT NULL,
+  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `disagreement_average` float DEFAULT '0',
+  PRIMARY KEY (`group_a`, `group_b`),
+  INDEX(`disagreement_average`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;

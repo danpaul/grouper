@@ -18,6 +18,7 @@ var groupModel = require('../models/group');
 var postModel = require('../models/post');
 var userModel = require('../models/user');
 var voteModel = require('../models/vote');
+var groupAgremmentModel = require('../models/group_agreement');
 
 var groupGroupingTest = {};
 
@@ -71,19 +72,6 @@ groupGroupingTest.runTest = function(callbackIn){
                 }
             })
 
-            // get all users in each group
-
-            // create map of groups to users
-
-            // group the groups
-
-            // for each group grouping
-
-            // get all users in those groupings
-
-            // for each post have each user vote the same way
-
-
         },
 
         // create arbitrary groupings
@@ -135,9 +123,9 @@ groupGroupingTest.runTest = function(callbackIn){
             }, callback)
         },
 
+        // perform the actual grouping
         function(callback){
-            console.log('jere');
-            callback()
+            groupAgremmentModel.groupGroups(callback)
         }
 
     ], function(err){
