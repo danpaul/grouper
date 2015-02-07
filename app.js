@@ -39,12 +39,20 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 var posts = require('./routes/posts');
 
-var groupTest = require('./test/group');
-groupTest.runTests(function(err){
+
+
+// var groupTest = require('./test/group');
+// groupTest.runTests(function(err){
+//     if(err){ console.log(err) }
+//     else{ console.log('success'); }
+// });
+
+var groupGroupingTest = require('./test/group_groups');
+
+groupGroupingTest.runTest(function(err){
     if(err){ console.log(err) }
     else{ console.log('success'); }
 });
-
 
 
 // view engine setup

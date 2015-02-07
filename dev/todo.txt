@@ -1,6 +1,16 @@
 
+- order groups
 
-- create DB clear function
+- develop ranking system
+
+- develop comment system
+
+- develop spam check
+
+- 
+
+
+
 
 - create dynamic test, see which settings in regroup function lead to fastest regrouping with smallest bias 
 

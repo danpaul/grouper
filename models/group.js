@@ -82,7 +82,14 @@ groupModel.getUsersInGroups = function(groupIds, returnMap, callbackIn){
         .whereIn('group', groupIds)
         .then(function(userGroups){
             if( returnMap ){
-
+                var groupUserMap = {};
+                _.each(userGroups, function(userGroup){
+                    if( typeof(groupUserMap[userGroup.group]) === 'undefined' ){
+                        groupUserMap[userGroup.group] = [];
+                    }
+                    groupUserMap[userGroup.group].push(userGroup.user)
+                })
+                callbackIn(null, groupUserMap)
             }else{
                 userIds = _.uniq(_.flatten(_.map(userGroups, function(userGroup){
                     return userGroup.user;

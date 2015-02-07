@@ -16,12 +16,12 @@ var voteModel = require('../models/vote');
 var groupTest = {};
 
 var settings = {
-    numberOfCycles: 5,
-    numberOfUsers: 20,
-    numberOfGroups: 3,
-    numberOfGroupings: 3,
+    numberOfCycles: 100,
+    numberOfUsers: 100,
+    numberOfGroups: 10,
+    numberOfGroupings: 10,
     numberOfPosts: 20,
-    testBias: 0.4
+    testBias: 0.2
 }
 
 groupTest.runTest = function(groupingSettings, callbackIn){
@@ -82,10 +82,10 @@ groupTest.runTests = function(callbackIn){
         minimumVotesToDoUserComparison: 10,
 
         // percentage of users in a group to regroup
-        percentUsersToRegroup: 0.5,
+        percentUsersToRegroup: null,
 
         // maximum number of user votes that will get compared    
-        userPostVotesToCompare: 20,
+        userPostVotesToCompare: 30,
     }
 
     async.eachSeries(_.range(1, 11), function(number, callback){

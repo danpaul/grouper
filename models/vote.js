@@ -19,7 +19,7 @@ voteModel.getRandomBias = function(bias){
 // bias should be a value close to 0.5
 // if the value is less than 0.5, the vote will more likely be an upvote
 // else, the vote will more likely be a downvote
-voteModel.getVoteFromBias= function(bias){
+voteModel.getVoteFromBias = function(bias){
     if( Math.random() >= bias ){ return constants.upvote; }
     else{ return constants.downvote; }
 }
