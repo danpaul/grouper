@@ -92,6 +92,34 @@ groupAgreementModel.groupGroups = function(callbackIn){
 	], callbackIn)
 }
 
+// takes group id and number of groups
+// passes back a maximum of that many groups with the least amount of disagreement
+groupAgreementModel.getAgreeingGroups = function(groupId, numberOfGroups, callbackIn){
+	knex('group_agreements')
+		.select(['group_a', 'group_b', 'disagreement_average'])
+		.where({'group_a': groupId})
+		.orWhere({'group_b': groupId})
+		.orderBy('disagreement_average', 'asc')
+		.limit(numberOfGroups)
+		.then(function(groupAgreementsIn){
+			var groupAgreements = _.map(groupAgreementsIn, function(agreement){
+				var groupBid;
+				if( agreement.group_a !== groupId ){
+					groupBid = agreement.group_a
+				} else {
+					groupBid = agreement.group_b
+				}
+
+				return({
+					group: groupBid,
+					disagreement_average: agreement.disagreement_average
+				})
+			})
+			callbackIn(null, groupAgreements);
+		})
+		.catch(callbackIn)
+}
+
 // calculates the average difference between tow groups votes
 // if insufficent comparison were made, returns null, else returns the average difference
 var getVoteDifferenceAverage = function(groupAPostMap, groupBPostMap){

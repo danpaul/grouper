@@ -18,7 +18,7 @@ var groupModel = require('../models/group');
 var postModel = require('../models/post');
 var userModel = require('../models/user');
 var voteModel = require('../models/vote');
-var groupAgremmentModel = require('../models/group_agreement');
+var groupAgreementModel = require('../models/group_agreement');
 
 var groupGroupingTest = {};
 
@@ -125,9 +125,27 @@ groupGroupingTest.runTest = function(callbackIn){
 
         // perform the actual grouping
         function(callback){
-            groupAgremmentModel.groupGroups(callback)
-        }
+            groupAgreementModel.groupGroups(callback)
+        },
 
+        // check groupings
+        function(callback){
+            async.eachSeries(groupings, function(grouping, callbackB){
+
+                // get agreeing groups
+                groupAgreementModel.getAgreeingGroups(grouping[0],
+                                                      2,
+                                                      function(err, groupAgreements){
+                    if(err){ callbackB(err); }
+                    else{
+                        _.each(groupAgreements, function(agreement){
+                            assert(_.contains(grouping, agreement.group))
+                        })
+                        callbackB()                        
+                    }
+                })
+            }, callback)
+        }
     ], function(err){
         if(err){ callbackIn(err) }
         else{ callbackIn(); }

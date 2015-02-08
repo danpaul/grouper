@@ -16,7 +16,8 @@
             'posts',
             'users',
             'user_group_agreements',
-            'user_votes'
+            'user_votes',
+            'group_agreements'
         ]
     }
 
