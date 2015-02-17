@@ -1,3 +1,6 @@
+- update user managment
+
+
 - group_votes and posts should have ranking
 
 - order groups
