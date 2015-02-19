@@ -1,3 +1,11 @@
+- get rid of "Norm"
+
+- sort through controllers and lib, get rid of unused
+
+- document tests
+
+
+
 - update user managment
 
 
