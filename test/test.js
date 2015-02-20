@@ -16,27 +16,35 @@
     test.runTest = function(){
         async.waterfall([
             test.emptyDatabase,
-            // voteTest.runTest,
+            voteTest.runTest,
             // test.emptyDatabase,
-            groupingTest.runTest,
-            // groupTest.runTest,
-            // test.emptyDatabase
+            // groupingTest.runTest,
+            function(callback){
+                groupTest.runTest(null, function(err, averages){
+                    if( err ){
+                        callback(err)
+                    } else {
+                        callback()
+                    }
+                })
+            },
+            test.emptyDatabase
         ], function(err){
             if(err){ console.log(err); }
             else{ console.log('grouper tests passed'); }
         })
     }
 
-    // test.emptyDatabase = function(callbackIn){
-    //     async.each(constants.databaseTables, test.clearTable, callbackIn);
-    // }
+    test.emptyDatabase = function(callbackIn){
+        async.each(constants.databaseTables, test.clearTable, callbackIn);
+    }
 
-    // test.clearTable = function(table, callbackIn){
-    //         knex(table)
-    //             .truncate()
-    //             .then(function(){ callbackIn(); })
-    //             .catch(callbackIn)
-    // }
+    test.clearTable = function(table, callbackIn){
+            knex(table)
+                .truncate()
+                .then(function(){ callbackIn(); })
+                .catch(callbackIn)
+    }
 
     module.exports = test;
 

@@ -1,3 +1,6 @@
+// DEPRECATED TEST - Tested multi-group user grouping
+
+
 (function () {
 
 /**
@@ -15,16 +18,28 @@ var postModel = require('../models/post');
 var userModel = require('../models/user');
 var voteModel = require('../models/vote');
 
+// var settings = {
+//     numberOfGroups: 10, // should be at least 10
+//     numberOfGroupsUserBelongsTo: 1,
+//     numberOfPosts: 100, // should be at least 10
+//     numberOfUsers: 100, // should be at least 10
+//     numberOfGroupings: 10,
+//     numberOfGroupingsUserBelongsTo: 1,
+//     testBias: 0.1,
+//     numberOfCycles: 100
+// }
+
 var settings = {
     numberOfGroups: 10, // should be at least 10
     numberOfGroupsUserBelongsTo: 1,
-    numberOfPosts: 100, // should be at least 10
-    numberOfUsers: 100, // should be at least 10
-    numberOfGroupings: 10,
+    numberOfPosts: 10, // should be at least 10
+    numberOfUsers: 10, // should be at least 10
+    numberOfGroupings: 3,
     numberOfGroupingsUserBelongsTo: 1,
     testBias: 0.1,
-    numberOfCycles: 100
+    numberOfCycles: 10
 }
+
 
 grouping.runTest = function(callbackIn){
     var goupIds;
@@ -81,6 +96,7 @@ grouping.voteGroupCycle = function(userIds, groupIds, callbackIn){
 
             // create new posts
             function(callbackB){
+console.log(1)
                 postModel.createSeedPosts(settings.numberOfPosts, userIds[0], function(err, postIdsIn){
                     if( err ){ callbackB(err); }
                     else{ postIds = postIdsIn; callbackB(); }
@@ -89,16 +105,20 @@ grouping.voteGroupCycle = function(userIds, groupIds, callbackIn){
 
             // have all users vote
             function(callbackB){
+console.log(2)
                 grouping.voteCycle(userGroupMap, postIds, callbackB);
             },
 
             // group users based on their votes
             function(callbackB){
-                groupModel.groupUsers(groupIds, callbackB);
+console.log(3)
+                // groupModel.groupUsers(groupIds, callbackB);
+groupModel.groupUsers(groupIds, function(){console.log('hhhh')});
             },
             
             // display grouping statistics
             function(callbackB){
+console.log(4)
                 grouping.displayGroupStatistics(userIds, userGroupMap, groupIds, callbackB);
             }
 

@@ -20,11 +20,24 @@ var settings = {
     numberOfUsers: 100,
     numberOfGroups: 10,
     numberOfGroupings: 10,
-    numberOfPosts: 20,
-    testBias: 0.2
+    numberOfPosts: 100,
+    testBias: 0.4
 }
 
+// var settings = {
+//     numberOfCycles: 10,
+//     numberOfUsers: 10,
+//     numberOfGroups: 3,
+//     numberOfGroupings: 3,
+//     numberOfPosts: 20,
+//     testBias: 0.4
+// }
+
 groupTest.runTest = function(groupingSettings, callbackIn){
+    if( groupingSettings === null ){
+        groupingSettings = settings;
+    }
+
     var seedData;
     var groupings;
     async.waterfall([
@@ -56,8 +69,13 @@ groupTest.runTest = function(groupingSettings, callbackIn){
                 });
         }
     ], function(err, averages){
-        if(err){ callbackIn(err) }
-        else{ callbackIn(null, averages); }
+        if(err){
+            callbackIn(err)
+            return;
+        } else {
+            callbackIn(null, averages);
+            return;
+        }
     })
 }
 

@@ -1,3 +1,12 @@
+- get grouping test working correctly again
+	+ group test is iterating through multiple tests - should do basic, quick analysis to make sure things work as expected
+
+- to group votes and posts, ensure rank and created (int) are set
+
+- set cron job to it iterate through active posts and rank them
+
+
+
 - get rid of "Norm"
 
 - sort through controllers and lib, get rid of unused
@@ -79,7 +88,9 @@
 
 - optimize removeUserFromGroup function
 
-- add indexes
+
+
+- add indexes: REVIEW EVERYTHING!!!
 	+ confirm which should be compound
     + percentages (agreements)   
     + totals

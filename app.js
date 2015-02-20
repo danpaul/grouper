@@ -14,14 +14,9 @@ var users = require('./routes/users');
 var posts = require('./routes/posts');
 
 if( testing ){
-    // var groupGroupingTest = require('./test/group_groups');
 
-    // groupGroupingTest.runTest(function(err){
-    //     if(err){ console.log(err) }
-    //     else{ console.log('success'); }
-    // });
-	var rank = require('./lib/rank');
-	rank.test()
+	var test = require('./test/test')
+	test.runTest()
 
 }
 
