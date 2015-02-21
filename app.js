@@ -14,10 +14,8 @@ var users = require('./routes/users');
 var posts = require('./routes/posts');
 
 if( testing ){
-
 	var test = require('./test/test')
 	test.runTest()
-
 }
 
 app.use('/', routes);
