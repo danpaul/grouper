@@ -11,6 +11,28 @@ var knex = config.knex
 
 var TABLE_NAME = 'user_vote'
 
+/*******************************************************************************
+
+                            MAIN FUNCTIONS
+
+*******************************************************************************/
+
+
+/**
+* Returns a maximum of number of votes of users recent votes ordered in desc
+*   order.
+* Returned array contains post and vote (both ids).
+*/
+userVote.getRecentVotes = function(userId, numberOfVotes, callbackIn){
+    knex(TABLE_NAME)
+        .where({user: userId})
+        .select(['vote', 'post'])
+        .orderBy('created', 'desc')
+        .limit(numberOfVotes)
+        .then(function(rows){ callbackIn(null, rows); })
+        .catch(callbackIn)
+}
+
 /**
 * Checks if user has voted then casts user vote.
 * groupId can be set to null in which case, it will be looked up

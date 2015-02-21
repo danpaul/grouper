@@ -1,10 +1,14 @@
+/**
+* This module tests basic functionality. Creating users, groups and
+* casting votes.
+*/
+
 var _ = require('underscore')
 var async = require('async')
 var assert = require('assert')
 var config = require('../config')
 var models = require('../models/models')
 var seed = require('../lib/seed')
-
 
 var voteTest = {};
 
@@ -114,103 +118,112 @@ voteTest.runTest = function(settings, callbackIn){
         },
         // check users votes
         function(callback){
-console.log('asdf')
-return
-            userModel.getRecentVotes(userIds[0], settings.numberOfTestVotes, function(err, votes){
+            models.userVote.getRecentVotes(userIds[0],
+                                           settings.numberOfTestVotes,
+                                           function(err, votes){
                 if( err ){ callback(err); }
                 else{
                     votes.forEach(function(voteObj){
-                        assert((voteObj.vote === constants.upvote), 'User votes are not correct.');
+                        assert((voteObj.vote === config.UPVOTE), 'User votes are not correct.');
                     });
                     callback();
                 }
             });
         },
 
-        // have user 2 cast 10 upvotes
+        // have user 3 cast 10 upvotes (in same group as as user 1)
         function(callback){
-            castTestVotes(userIds[1], postIds, constants.upvote, callback);
+            castTestVotes(userIds[2], postIds, config.UPVOTE, callback);
         },
+
         // confirm group votes are recorded
         function(callback){
-            async.eachSeries(_.range(settings.numberOfTestGroups), function(number, callbackB){
-                groupVoteModel.getGroupVotes(groupIds[number], function(err, groupVotes){
-                    if( err ){ callbackB(err); }
-                    else{
-                        groupVotes.forEach(function(voteObj){
-                            assert((voteObj.up === 2), 'Upvotes not correct');
-                            assert((voteObj.down === 0), 'Downvotes not correct');
-                            assert((voteObj.total === 2), 'Total votes not correct');
-                            assert((voteObj.percentage_up === 1.0), 'Percentage up votes not correct');
-                        });
-                        callbackB();
-                    }
-                });
-            }, callback)
-        },
-        // have user 3 cast 10 upovtes
-        function(callback){
-            castTestVotes(userIds[2], postIds, constants.upvote, callback);
-        },
-        // have user 4 cast 10 downvotes
-        function(callback){
-            castTestVotes(userIds[3], postIds, constants.downvote, callback);
-        },
-        // confirm user 4 votes went through
-        function(callback){
-            userModel.getRecentVotes(userIds[3], settings.numberOfTestVotes, function(err, votes){
+            models.groupVote.getVotes(groupIds[0], function(err, groupVotes){
                 if( err ){ callback(err); }
                 else{
-                    votes.forEach(function(vote){
-                        assert((vote.vote = constants.downvote ), 'Downvotes did not get set');
+                    groupVotes.forEach(function(voteObj){
+                        assert((voteObj.up === 2), 'Upvotes not correct');
+                        assert((voteObj.down === 0), 'Downvotes not correct');
+                        assert((voteObj.total === 2), 'Total votes not correct');
+                        assert((voteObj.percentage_up === 1.0), 'Percentage up votes not correct');
                     });
                     callback();
                 }
             });
         },
-        // check group votes
+
+        // have user 4 cast 10 upovtes
         function(callback){
-            async.eachSeries(_.range(settings.numberOfTestGroups), function(number, callbackB){
-                groupVoteModel.getGroupVotes(groupIds[number], function(err, groupVotes){
-                    if( err ){ callbackB(err); }
-                    else{
-                        groupVotes.forEach(function(voteObj){
-                            assert((voteObj.percentage_up === 0.75), 'Percentage up votes not correct');
-                        });
-                        callbackB();
-                    }
-                });
-            }, callback)
+            castTestVotes(userIds[3], postIds, config.UPVOTE, callback);
         },
-        // have user 5 cast half upvotes and half downvotes
+        // have user 5 cast 10 downvotes
         function(callback){
-            var vote;
-            async.eachSeries(_.range(settings.numberOfTestVotes), function(number, callbackB){
-                if( number % 2 === 0 ){ vote = constants.upvote; }
-                else{ vote = constants.downvote; }
-                userModel.castVote(userIds[4], postIds[number], vote, callbackB);
-            }, callback);
+            castTestVotes(userIds[4], postIds, config.DOWNVOTE, callback);
         },
-        // confirm user 5 has 50% agreement
+        // confirm user 5 votes went through
         function(callback){
-            userModel.getRecentVotes(userIds[4], settings.numberOfTestVotes, function(err, votes){
+            models.userVote.getRecentVotes(userIds[4],
+                                           settings.numberOfTestVotes,
+                                           function(err, votes){
+
                 if( err ){ callback(err); }
                 else{
                     votes.forEach(function(vote){
-                        assert((vote.percentage_up = 0.5 ), 'User group agreement not correct');
+                        assert((vote.vote = config.DOWNVOTE), 'Downvotes did not get set');
                     });
+                    callback();
+                }
+            });
+        },
+
+        // check group votes
+        function(callback){
+
+
+            models.groupVote.getVotes(groupIds[0], function(err, groupVotes){
+                if( err ){ callback(err); }
+                else{
+                    groupVotes.forEach(function(voteObj){
+                        assert((voteObj.up === 2), 'Upvotes not correct');
+                        assert((voteObj.down === 1), 'Downvotes not correct');
+                        assert((voteObj.total === 3), 'Total votes not correct');
+                        assert((voteObj.percentage_up > 0.65 && voteObj.percentage_up < 0.67),
+                            'Percentage up votes not correct');
+                    });
+                    callback();
+                }
+            });
+        },
+
+        // have user 6 cast half upvotes and half downvotes
+        function(callback){
+            var vote;
+            async.eachSeries(_.range(10), function(number, callbackB){
+                if( number % 2 === 0 ){ vote = config.UPVOTE; }
+                else{ vote = config.DOWNVOTE; }
+                models.userVote.vote(userIds[5], null, postIds[number], vote, callbackB);
+            }, callback);
+        },
+
+        // confirm user 5 has 50% agreement
+        function(callback){
+
+            models.userVote.getRecentVotes(userIds[5],
+                                           settings.numberOfTestVotes,
+                                           function(err, votes){
+
+                if( err ){ callback(err); }
+                else{
+                    var total = 0;
+                    votes.forEach(function(voteObj){
+                        total += voteObj.vote
+                    });
+                    assert((total / 10 == 0.5), 'User vote percentage should be 0.5')
                     callback();
                 }
             });
         }
     ], callbackIn);
 }
-
-// function castTestVotes(userId, postIds, vote, callback){
-//     async.eachSeries(_.range(settings.vote.numberOfTestVotes), function(number, callback){
-//         models.userVote.vote(userId, postIds[number], vote, callback);
-//         // userModel.castVote(userId, postIds[number], vote, callback);
-//     }, callback);
-// }
 
 module.exports = voteTest;
