@@ -49,6 +49,19 @@ userModel.addGroup = function(userId, groupId, callbackIn){
         .catch(callbackIn)
 }
 
+/**
+* Passes back a number of users in group.
+*/
+userModel.countInGroup = function(groupId, callbackIn){
+	knex(TABLE_NAME)
+        .count('*')
+        .where('group', groupId)
+        .then(function(count){
+            var numberOfUsersInGroup = count[0]['count(*)'];
+            callbackIn(null, numberOfUsersInGroup);
+        })
+        .catch(callbackIn)
+}
 
 /*******************************************************************************
 

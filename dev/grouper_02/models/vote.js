@@ -31,8 +31,31 @@ voteModel.getRandomBias = function(bias){
 * else, the vote will more likely be a downvote
 */
 voteModel.getVoteFromBias = function(bias){
-    if( Math.random() >= bias ){ return constants.upvote; }
-    else{ return constants.downvote; }
+    if( Math.random() >= bias ){ return config.UPVOTE; }
+    else{ return config.DOWNVOTE; }
+}
+
+/**
+* @param - takes int userVote, float percentage of upvotes, int total votes cast
+* @return - null if 1 or less votes have been cast, `UPVOTE` if user agrees, `DOWNVOTE` if
+*   user disagrees
+*/
+voteModel.getUserAgreementVote = function( userVote, percentageGroupUpVotes, totalVotes){
+    // if 1 or no votes have been made for post, or if votes are split, do nothing
+    if( totalVotes <= 1 || percentageGroupUpVotes == 0.5 ){
+        return null;
+    } else {
+        // determine if user is in agreement
+        if( (userVote === config.UPVOTE && percentageGroupUpVotes > 0.5) ||
+            (userVote === config.DOWNVOTE && percentageGroupUpVotes < 0.5) )
+        {
+            // user agrees, gets an upvote
+            return config.UPVOTE;
+        } else {
+            // user disagrees, gets a downvote
+            return config.DOWNVOTE;
+        }
+    }
 }
 
 

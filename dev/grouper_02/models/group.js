@@ -21,29 +21,6 @@ groupModel.add = function(groupData, callbackIn){
     baseModel.add(TABLE_NAME, {}, callbackIn);
 }
 
-// groupModel.updateUsersGroupVotes = function(userId, groupId, postId, vote, callbackIn){
-
-//     groupModel.updateGroupVote(groupId, postId, vote, function(err){
-//         if(err){ callbackB(err); }
-//         else{
-//             // update user group agreements
-//             groupModel.updateUserGroupAgreements(groupId, userId, postId, vote, callbackB)
-//         }
-//     });
-
-// }
-
-
-
-// groupModel.updateGroupVote = function(groupId, postId, vote, callbackIn){
-//     var queryObj = voteModel.getMultiKeyVoteQuery( 'group_votes', 'post', postId, 'group', groupId, vote);
-//     knex.raw(queryObj.statement, queryObj.params)
-//         .then(function(){ callbackIn(); })
-//         .catch(callbackIn);
-// }
-
-
-
 module.exports = groupModel;
 
 /*******************************************************************************

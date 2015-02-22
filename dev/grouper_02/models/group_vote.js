@@ -24,7 +24,25 @@ groupVote.update = function(groupId, postId, vote, callbackIn){
 }
 
 /**
-* Gets all goup votes
+* Gets group's vote for specific post
+* If group vote doesn't exist, passes back null
+*/
+groupVote.get = function(groupId, postId, callbackIn){
+
+    knex(TABLE_NAME)
+        .select(['percentage_up', 'total'])
+        .where({group: groupId, post: postId})
+        .then(function(rows){
+            if( rows.length === 0 ){ callbackIn(null, null) }
+            else{
+                callbackIn(null, rows[0])
+            }
+        })
+        .catch(callbackIn)
+}
+
+/**
+* Gets all group's votes
 */
 groupVote.getVotes = function(groupId, callbackIn){
     knex(TABLE_NAME)

@@ -1,11 +1,15 @@
 var userVote = {}
 
 var config = require('../config')
+
+var async = require('async')
+
 var groupModel = require('./group')
 var groupVoteModel = require('./group_vote')
 var postModel = require('./post')
 var voteModel = require('./vote')
 var userModel = require('./user')
+var userGroupAgreementModel = require('./user_group_agreement')
 
 var knex = config.knex
 
@@ -38,6 +42,7 @@ userVote.getRecentVotes = function(userId, numberOfVotes, callbackIn){
 * groupId can be set to null in which case, it will be looked up
 */
 userVote.vote = function(userId, groupId, postId, vote, callbackIn){
+
     userVote.hastNotVoted(userId, postId, callbackIn, function(){
            knex(TABLE_NAME)
             .insert({
@@ -46,29 +51,79 @@ userVote.vote = function(userId, groupId, postId, vote, callbackIn){
                 'vote': vote
             })
             .then(function(userVoteId){
-                // update general post vote
-            	postModel.updateVote(postId, vote, function(err){
-                    if( err ){ callbackIn(err); }
-                    else{
-                        // update group vote
+                async.waterfall([
+                    function(callback){
+                        // update general post vote
+                        postModel.updateVote(postId, vote, callback)
+                    },
+
+                    function(callback){
+                        // get groupId if it was not passed in
                         if( groupId === null ){
                             userModel.get(userId, function(err, user){
                                 if( err ){ callbackIn(err) }
                                 else {
-                                    if( user === null ){ callbackIn() }
-                                    else {
-                                        groupVoteModel.update(user.group, postId, vote, callbackIn);
-                                    }
+                                    groupId = user.group
+                                    callback()
                                 }
                             })
                         } else {
-                            groupVoteModel.update(user.group, postId, vote, callbackIn);
+                            callback()                            
                         }
+                    },
+
+                    function(callback){
+                        groupVoteModel.update(groupId,
+                                              postId,
+                                              vote,
+                                              callback);
+                    },
+
+                    // update user group agreement
+                    function(callback){
+                        userGroupAgreementModel.update(groupId,
+                                                       userId,
+                                                       postId,
+                                                       vote,
+                                                       callback);
                     }
-                });
+
+                ], callbackIn)
             })
             .catch(callbackIn)
     });
+
+    // userVote.hastNotVoted(userId, postId, callbackIn, function(){
+    //        knex(TABLE_NAME)
+    //         .insert({
+    //             'user': userId,
+    //             'post': postId,
+    //             'vote': vote
+    //         })
+    //         .then(function(userVoteId){
+    //             // update general post vote
+    //         	postModel.updateVote(postId, vote, function(err){
+    //                 if( err ){ callbackIn(err); }
+    //                 else{
+    //                     // update group vote
+    //                     if( groupId === null ){
+    //                         userModel.get(userId, function(err, user){
+    //                             if( err ){ callbackIn(err) }
+    //                             else {
+    //                                 if( user === null ){ callbackIn() }
+    //                                 else {
+    //                                     groupVoteModel.update(user.group, postId, vote, callbackIn);
+    //                                 }
+    //                             }
+    //                         })
+    //                     } else {
+    //                         groupVoteModel.update(user.group, postId, vote, callbackIn);
+    //                     }
+    //                 }
+    //             });
+    //         })
+    //         .catch(callbackIn)
+    // });
 }
 
 /**

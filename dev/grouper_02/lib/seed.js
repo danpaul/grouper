@@ -3,6 +3,20 @@ var models = require('../models/models')
 
 var seed = {}
 
+seed.assignUsersToGroups = function(groupIds, userIds, callbackIn){
+    var count = 0;
+    async.eachSeries(userIds, function(userId, callback){
+        models.user.addGroup(userId, groupIds[count], function(err){
+            if(err){ callback(err); }
+            else{
+                count++;
+                if( count >= groupIds.length ){ count = 0; }
+                callback();
+            }
+        });
+    }, callbackIn)
+}
+
 /**
 * Takes number of groups and creates that many groups.
 * Callback gets called with an array of group ids.
