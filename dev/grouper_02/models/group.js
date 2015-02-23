@@ -3,6 +3,7 @@ var groupModel = {};
 var config = require('../config')
 var async = require('async')
 var knex = config.knex
+var _ = require('underscore')
 
 var baseModel = require('./base')
 
@@ -19,6 +20,20 @@ var TABLE_NAME = 'group';
 */
 groupModel.add = function(groupData, callbackIn){
     baseModel.add(TABLE_NAME, {}, callbackIn);
+}
+
+/**
+* Passes back a random number number of groups
+*/
+groupModel.getRandom = function(numberOfGroups, callbackIn){
+	knex(TABLE_NAME)
+		.select(['id'])
+		.orderByRaw('RAND()')
+		.limit(numberOfGroups)
+		.then(function(rows){
+			callbackIn(null, _.map(rows, function(r){ return r.id; }))
+		})
+		.catch(callbackIn)
 }
 
 module.exports = groupModel;

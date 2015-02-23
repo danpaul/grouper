@@ -61,6 +61,11 @@ groupTest.runTest = function(settings, callbackIn){
             numberOfCycles: settings.numberOfCycles,
             numberOfPosts: settings.numberOfPosts,
             testBias: settings.testBias,
+            minimumVotesToIncludeInSort: settings.minimumVotesToIncludeInSort,
+            numberOfUserToRegroup: settings.numberOfUserToRegroup,
+            userPostVotesToCompare: settings.userPostVotesToCompare,
+            minimumVotesToDoUserComparison: settings.minimumVotesToDoUserComparison,
+            maximumGroupsToCompare: settings.maximumGroupsToCompare
         }, callback)
     }
 

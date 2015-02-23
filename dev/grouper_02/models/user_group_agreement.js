@@ -16,20 +16,26 @@ var TABLE_NAME = 'user_group_agreement'
 
 *******************************************************************************/
 
-// Udpates user group agreements
+/**
+* Update user group agreement
+*/
 userGroupAgreement.update = function(groupId, userId, postId, vote, callbackIn){
 
+    // get the group's vote
 	groupVoteModel.get(groupId, postId, function(err, groupVote){
 		if( err ){
 			callbackIn(err)
 			return
 		}
 
+        // this should happen since user this should only get called after
+        //  user's group vote has been cast
 		if( groupVote === null ){
 			callbackIn();
 			return;
 		}
 
+        // deterimine if user agrees with group
         var userAgreementVote =
             voteModel.getUserAgreementVote( vote,
             		   						groupVote.percentage_up,
@@ -50,12 +56,33 @@ userGroupAgreement.update = function(groupId, userId, postId, vote, callbackIn){
         									           userAgreementVote);
 
 
-
+        // update 
         knex.raw(queryObj.statement, queryObj.params)
             .then(function(){ callbackIn(); })
 			.catch(callbackIn)
 
 	})
+}
+
+/**
+* Passes back users with the lowest group agreement.
+*/
+userGroupAgreement.getUsersToRegroup = function(groupId,
+                                                numberOfUserToRegroup,
+                                                minimumVotesToIncludeInSort,
+                                                callbackIn){
+
+    knex(TABLE_NAME)
+        .select(['user', 'percentage_up'])
+        .where('group', groupId)
+        .andWhere('total', '>', minimumVotesToIncludeInSort)
+        .orderBy('percentage_up', 'asc')
+        .limit(numberOfUserToRegroup)
+        .then(function(userAgreements){
+            callbackIn(null, userAgreements)
+        })
+        .catch(callbackIn)
+
 }
 
 module.exports = userGroupAgreement

@@ -15,6 +15,18 @@ module.exports = {
 	    numberOfGroups: 3,
 	    numberOfGroupings: 3,
 	    numberOfPosts: 20,
-	    testBias: 0.4
+	    testBias: 0.4,
+
+		// the following are used for grouping function
+		minimumVotesToIncludeInSort: 1,
+		// number of user to regroup in each group
+    	numberOfUserToRegroup: 3,
+    	// number of user votes that get compated
+       	userPostVotesToCompare: 5,
+       	// users with fewer than these votes will not be regrouped
+       	minimumVotesToDoUserComparison: 1,
+		// maximum number of groups user will be compared to when regrouping
+    	maximumGroupsToCompare: 5
+
 	}
 }

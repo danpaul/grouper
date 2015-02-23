@@ -52,4 +52,18 @@ groupVote.getVotes = function(groupId, callbackIn){
         .catch(callbackIn)
 }
 
+groupVote.getGroupPostVotes = function(groupId,
+                                       postIds,
+                                       minimumGroupVotesToCompare,
+                                       callbackIn){
+
+    knex(TABLE_NAME)
+        .select(['percentage_up', 'total', 'post'])
+        .where('group', groupId)
+        .whereIn('post', postIds)
+        .then(function(groupVotes){ callbackIn(null, groupVotes); })
+        .catch(callbackIn)
+
+}
+
 module.exports = groupVote
