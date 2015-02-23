@@ -4,6 +4,8 @@ var config = require('../config')
 var baseModel = require('./base')
 var knex = config.knex
 
+var userGroupAgreementModel = require('./user_group_agreement')
+
 var TABLE_NAME = 'user'
 
 /*******************************************************************************
@@ -61,6 +63,36 @@ userModel.countInGroup = function(groupId, callbackIn){
             callbackIn(null, numberOfUsersInGroup);
         })
         .catch(callbackIn)
+}
+
+userModel.leaveGroup = function(groupId, userId, callbackIn){
+
+    userGroupAgreementModel.removeUser(groupId, userId, function(err){
+        if(err){ callbackIn(err) }
+        else {
+            knex(TABLE_NAME)
+                .where('id', userId)
+                .update('group', 0)
+                .then(function(){ callbackIn() })
+                .catch(callbackIn)
+        }
+    })
+
+}
+
+userModel.changeGroup = function(oldGroupId, newGroupId, userId, callbackIn){
+
+    userGroupAgreementModel.removeUser(oldGroupId, userId, function(err){
+        if(err){ callbackIn(err) }
+        else {
+            knex(TABLE_NAME)
+                .where('id', userId)
+                .update('group', newGroupId)
+                .then(function(){ callbackIn() })
+                .catch(callbackIn)
+        }
+    })
+
 }
 
 /*******************************************************************************

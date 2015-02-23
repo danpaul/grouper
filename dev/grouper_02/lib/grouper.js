@@ -91,24 +91,8 @@ grouper.processUsers = function(settings, userAgreements, groupId, callbackIn){
                     agreement.user,
                     groupId,
                     agreement.percentage_up,
-                    function(err, newAgreements){
-console.log('here')
-return;
-            // if(err){ callback(err); }
-            // else{
+                    callback)
 
-            //     if( newAgreements.length < 1 ){ callback(); }
-            //     else{
-            //         regroupUser(
-            //             agreement.user,
-            //             groupId,
-            //             agreement.percentage_up,
-            //             newAgreements,
-            //             callback
-            //         );
-            //     }
-            // }
-        });
     }, function(err){
         if(err){ callbackIn(err); }
         else{ callbackIn(); }
@@ -225,48 +209,6 @@ grouper.compareUserWithGroups = function(settings,
 
     ], callbackIn)
 
-    // find X number of groups user does not belong to
-    // grouper.findGroupsUserDoesntBelongTo(settings,
-    //                                      userId,
-    //                                      function(err, groupIds){
-
-// console.log('aaaaa')
-return;
-
-    //     if(err){ callback(err); }
-    //     else{
-    //         if( groupIds.length > 0 ){
-
-    //             postVoteIds = [];
-    //             postVotes = {};
-    //             voteAgreements = [];
-
-    //             userVotes.forEach(function(v){
-    //                 postVoteIds.push(v.post);
-    //                 postVotes[v.post] = v.vote;
-    //             });
-
-    //             async.eachSeries(groupIds, function(groupId, callback_b){
-    //                 compareVotes(settings, groupId, postVotes, postVoteIds, function(err, percentage){
-    //                     if( err ){ callback_b(err); }
-    //                     else{
-    //                         if( percentage !== null ){
-    //                             voteAgreements.push({
-    //                                 groupId: groupId,
-    //                                 agreePercentage: percentage
-    //                             });
-    //                         }
-    //                         callback_b();
-    //                     }
-    //                 })
-    //             },
-    //             function(err){
-    //                 if(err){ callback(err); }
-    //                 else{ callback(null, voteAgreements) }
-    //             });
-    //         } else { callback(); }
-    //     }
-    // });
 }
 
 /******************************************************************************/
@@ -340,34 +282,6 @@ grouper.compareVotes = function(settings,
 
     })
 
-
-// console.log(postVoteIds)
-
-// console.log('here')
-// return;
-//     //get group votes for posts user voted for
-//     knex('group_votes')
-//         .select(['percentage_up', 'total', 'post'])
-//         .where('group', groupId)
-//         .whereIn('post', postVoteIds)
-//         .then(function(groupVotes){
-//             if( groupVotes < settings.minimumGroupVotesToCompare ){
-//                 callbackIn(null, 0.0);
-//             } else {
-//                 var agreedVotes = 0;
-//                 var totalVotes = 0;
-//                 groupVotes.forEach(function(agreement){
-//                     totalVotes += 1;
-//                     var uv = postVotes[agreement.post];
-//                     var gvp = agreement.percentage_up;
-//                     if( grouper.userAgrees(uv, gvp) ){
-//                         agreedVotes += 1;
-//                     }
-//                 });
-//                 callbackIn(null, (agreedVotes / totalVotes));
-//             }
-//         })
-//         .catch(callbackIn)
 }
 
 
@@ -386,22 +300,13 @@ grouper.regroupUser = function(userId,
         return(b.agreePercentage - a.agreePercentage);
     });
 
-// asdf
-console.log(newGroupAgreements)
-return;
-
     if( newGroupAgreements[0]['agreePercentage'] > currentGroupAgreement ){
-        unasignUser(userId, currentGroupId, function(err){
-            if(err){ callback(err) }
-            else{
-                assignUser(userId, newGroupAgreements[0]['groupId'], function(err){
-                    if(err){ callback(err); }
-                    else{
-                        callback();
-                    }
-                });
-            }
-        })
+
+        models.user.changeGroup(currentGroupId,
+                                newGroupAgreements[0]['groupId'],
+                                userId,
+                                callback)
+
     } else { callback(); }
 }
 

@@ -85,4 +85,12 @@ userGroupAgreement.getUsersToRegroup = function(groupId,
 
 }
 
+userGroupAgreement.removeUser = function(groupId, userId, callbackIn){
+    knex(TABLE_NAME)
+        .where({user: userId, group: groupId})
+        .del()
+        .then(function(){ callbackIn() })
+        .catch(callbackIn)
+}
+
 module.exports = userGroupAgreement
