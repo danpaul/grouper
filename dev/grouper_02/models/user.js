@@ -4,6 +4,8 @@ var config = require('../config')
 var baseModel = require('./base')
 var knex = config.knex
 
+var _ = require('underscore')
+
 var userGroupAgreementModel = require('./user_group_agreement')
 
 var TABLE_NAME = 'user'
@@ -92,7 +94,19 @@ userModel.changeGroup = function(oldGroupId, newGroupId, userId, callbackIn){
                 .catch(callbackIn)
         }
     })
+}
 
+/**
+* Passes back an array of userIds that are in group
+*/
+userModel.getUsersInGroup = function(groupId, callbackIn){
+    knex(TABLE_NAME)
+        .where('group', groupId)
+        .select(['id'])
+        .then(function(rows){
+            callbackIn(null, _.map(rows, function(r){ return r.id; }))
+        })
+        .catch(callbackIn)
 }
 
 /*******************************************************************************
