@@ -27,6 +27,13 @@ module.exports = {
        	minimumVotesToDoUserComparison: 1,
 		// maximum number of groups user will be compared to when regrouping
     	maximumGroupsToCompare: 5
+	},
 
+	groupGroup: {
+		numberOfGroups: 10,
+		numberOfUsers: 100,
+		numberOfPosts: 100,
+		numberOfGroupings: 10,
+		testBias: 0.4
 	}
 }

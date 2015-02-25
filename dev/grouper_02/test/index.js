@@ -21,13 +21,17 @@ var emptyDatabase = function(callbackIn){
 }
 
 async.waterfall([
+    // emptyDatabase,
+    // function(callback){
+    //     require('./vote').runTest(settings.vote, callback)
+    // },
+    // emptyDatabase,
+    // function(callback){
+    //     require('./group').runTest(settings.group, callback)
+    // }
     emptyDatabase,
     function(callback){
-        require('./vote').runTest(settings.vote, callback)
-    },
-    emptyDatabase,
-    function(callback){
-        require('./group').runTest(settings.group, callback)
+        require('./group_groups').runTest(settings.groupGroup, callback)
     }
     
 ], function(err){

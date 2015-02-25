@@ -35,8 +35,8 @@ groupTest.runTest = function(settings, callbackIn){
             seed.groups(settings.numberOfGroups, callback);
         },
         function(groupIdsIn, callback){
-            groupIds = groupIdsIn;
-            callback();
+            groupIds = groupIdsIn
+            callback()
         },
         // create users
         function(callback){
@@ -44,13 +44,13 @@ groupTest.runTest = function(settings, callbackIn){
         },
         // confirm users created
         function(userIdsIn, callback){
-            userIds = userIdsIn;
-            callback();
+            userIds = userIdsIn
+            callback()
         },
 
         // assign users to groups
         function(callback){
-            seed.assignUsersToGroups(groupIds, userIds, callback);
+            seed.assignUsersToGroups(groupIds, userIds, callback)
         },
 
     // vote cycle

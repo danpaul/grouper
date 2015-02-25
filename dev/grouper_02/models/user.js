@@ -109,6 +109,35 @@ userModel.getUsersInGroup = function(groupId, callbackIn){
         .catch(callbackIn)
 }
 
+/**
+* Takes and array of group ids
+* If `returnMap` is `true`, an object with group id as key and array of user
+*   ids as the value is passed back. Else an array of user ids is passed back.
+*/
+userModel.getUsersInGroups = function(groupIds, returnMap, callbackIn){
+    knex(TABLE_NAME)
+        .select(['id', 'group'])
+        .whereIn('group', groupIds)
+        .then(function(userGroups){
+            if( returnMap ){
+                var groupUserMap = {};
+                _.each(userGroups, function(userGroup){
+                    if( typeof(groupUserMap[userGroup.group]) === 'undefined' ){
+                        groupUserMap[userGroup.group] = [];
+                    }
+                    groupUserMap[userGroup.group].push(userGroup.id)
+                })
+                callbackIn(null, groupUserMap)
+            }else{
+                userIds = _.uniq(_.flatten(_.map(userGroups, function(userGroup){
+                    return userGroup.id;
+                })));
+                callbackIn(null, userIds);
+            }
+        })
+        .catch(callbackIn)
+}
+
 /*******************************************************************************
 
                             OLD
