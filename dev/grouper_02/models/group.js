@@ -23,6 +23,19 @@ groupModel.add = function(groupData, callbackIn){
 }
 
 /**
+* passes back an array of all groupIds
+*/
+groupModel.getAll = function(callbackIn){
+    knex(TABLE_NAME)
+        .select(['id'])
+        .then(function(rows){
+            var groupIds = _.map(rows, function(row){ return row.id; })
+            callbackIn(null, groupIds);
+        })
+        .catch(callbackIn)
+}
+
+/**
 * Passes back a random number number of groups
 */
 groupModel.getRandom = function(numberOfGroups, callbackIn){

@@ -1,7 +1,10 @@
 var groupAgreement = {}
 
 var settings = require('../settings').groupAgreement
+var groupModel = require('./group')
+var groupVoteModel = require('./group_vote')
 
+var _ = require('underscore')
 var async = require('async')
 
 // sets agreement percentage in group_agreements table for all groups
@@ -9,65 +12,65 @@ groupAgreement.group = function(callbackIn){
 	// var groupIds;
 	async.waterfall([
 
-		// // get all groups
-		// function(callback){
-		// 	// return;
-		// 	groupModel.getAllGroupIds(function(err, groupIdsIn){
-		// 		if(err){ callback(err) }
-		// 		else{
-		// 			groupIds = _.sortBy(groupIdsIn, function(groupId){
-		// 				return groupId;
-		// 			});
-		// 			callback()
-		// 		}
-		// 	})
-		// },
+		// get all groups
+		function(callback){
+			// return;
+			groupModel.getAll(function(err, groupIdsIn){
+				if(err){ callback(err) }
+				else{
+					groupIds = _.sortBy(groupIdsIn, function(groupId){
+						return groupId;
+					});
+					callback()
+				}
+			})
+		},
 
-		// function(callback){
-		// 	var currentIndex = 0;
-		// 	// iterate through each group
-		// 	async.eachSeries(groupIds, function(groupA, callbackB){
-		// 		// groupA's recent votes
-		// 		groupVoteModel.getRecentOrderedPosts(groupA,
-		// 											 settings.maxPoststoCompare,
-		// 											 function(err, groupAVotes){
+		function(callback){
+			var currentIndex = 0;
 
-		// 			if(err){ callbackB(err); }
-		// 			else{
+			async.eachSeries(groupIds, function(groupA, callbackB){
+				// groupA's recent votes
+				groupVoteModel.getRecentOrderedPosts(groupA,
+													 settings.maxPoststoCompare,
+													 function(err, groupAVotes){
+console.log(groupA)
+					// if(err){ callbackB(err); }
+					// else{
 
-		// 				// get the remaining groups to iterate through
-		// 				var groupBs = groupIds.slice(currentIndex)
+					// 	// get the remaining groups to iterate through
+					// 	var groupBs = groupIds.slice(currentIndex)
 
-		// 				var groupAPostMap = mapPosts(groupAVotes)
+					// 	var groupAPostMap = mapPosts(groupAVotes)
 
-		// 				// iterate through group bs
-		// 				async.eachSeries(groupBs, function(groupB, callbackC){
-		// 					// get groupBs recent votes
-		// 					groupVoteModel.getRecentOrderedPosts(groupB,
-		// 														 settings.maxPoststoCompare,
-		// 														 function(err, groupBVotes){
-		// 						if( err ){ callbackC(err) }
-		// 						else{
+					// 	// iterate through group bs
+					// 	async.eachSeries(groupBs, function(groupB, callbackC){
+					// 		// get groupBs recent votes
+					// 		groupVoteModel.getRecentOrderedPosts(groupB,
+					// 											 settings.maxPoststoCompare,
+					// 											 function(err, groupBVotes){
+					// 			if( err ){ callbackC(err) }
+					// 			else{
 
-		// 							// get post map
-		// 							var groupBPostMap = mapPosts(groupBVotes)
-		// 							var averageVoteDifference = getVoteDifferenceAverage(groupAPostMap, groupBPostMap);
+					// 				// get post map
+					// 				var groupBPostMap = mapPosts(groupBVotes)
+					// 				var averageVoteDifference = getVoteDifferenceAverage(groupAPostMap, groupBPostMap);
 
-		// 							if( averageVoteDifference !== null ){
-		// 								updateAgreement(groupA,
-		// 												groupB,
-		// 												averageVoteDifference,
-		// 												callbackC)
-		// 							}
+					// 				if( averageVoteDifference !== null ){
+					// 					updateAgreement(groupA,
+					// 									groupB,
+					// 									averageVoteDifference,
+					// 									callbackC)
+					// 				}
 
-		// 						}
-		// 					})
-		// 				}, callbackB)
-		// 			}
-		// 		})
-		// 		currentIndex++;
-		// 	}, callback)
-		// }
+					// 			}
+					// 		})
+					// 	}, callbackB)
+					// }
+				})
+				currentIndex++;
+			}, callback)
+		}
 
 	], callbackIn)
 }

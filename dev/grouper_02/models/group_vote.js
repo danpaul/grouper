@@ -2,8 +2,9 @@ var groupVote = {}
 
 var config = require('../config')
 var baseModel = require('./base')
-
 var knex = config.knex
+
+var _ = require('underscore')
 
 var TABLE_NAME = 'group_vote'
 
@@ -39,6 +40,25 @@ groupVote.get = function(groupId, postId, callbackIn){
             }
         })
         .catch(callbackIn)
+}
+
+/**
+* Takes an array of groupIds or single id and numberOfPosts
+* Passes back an array of group_votes
+*/
+groupVote.getRecentOrderedPosts = function(groupIds,
+                                           numberOfPosts,
+                                           callbackIn){
+
+    // if( !_.isArray(groupIds) ){ groupIds = [groupIds]; }
+
+    // knex(TABLE_NAME)
+    //     .select(['post', 'percentage_up', 'total', 'rank'])
+    //     .whereIn('group', groupIds)
+    //     .orderBy('rank', 'desc')
+    //     .limit(numberOfPosts)
+    //     .then(function(groupVotes){ callbackIn(null, groupVotes)})
+    //     .catch(callbackIn)
 }
 
 /**

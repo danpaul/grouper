@@ -53,8 +53,9 @@ groupGroup.runTest = function(settings, callbackIn){
             _.each(_.range(settings.numberOfGroupings), function(){
                 groupings.push([])
             })
+// console.log(groupings[0])
             var currentGrouping = 0;
-            for( var i = 0; i <  groupIds; i++ ){
+            for( var i = 0; i <  groupIds.length; i++ ){
                 groupings[currentGrouping].push(groupIds[i])
                 currentGrouping++;
                 if( currentGrouping >= settings.numberOfGroupings ){
@@ -67,6 +68,7 @@ groupGroup.runTest = function(settings, callbackIn){
         // for each group grouping
         // get all users in those groupings
         function(callback){
+console.log(1)
             async.eachSeries(groupings, function(grouping, callbackB){
                 // each grouping contains an array of group ids
                 // get all the users that belong to any of the groups in any of the group ids
@@ -80,7 +82,7 @@ groupGroup.runTest = function(settings, callbackIn){
                     // foreach user
                     async.eachSeries(users, function(userId, callbackD){
                         // determine vote
-                        var vote = voteModel.getVoteFromBias(bias);
+                        var vote = models.vote.getVoteFromBias(bias);
                         // cast user vote
                         models.userVote.vote(userId, null, postId, vote, callbackD)
                         // userModel.castVote(userId, postId, vote, callbackD);
@@ -90,6 +92,7 @@ groupGroup.runTest = function(settings, callbackIn){
                     })
                 },
                 function(err){
+console.log(3)
                     if( err ){ callbackB(err); }
                     else{
                         callbackB()
@@ -100,6 +103,8 @@ groupGroup.runTest = function(settings, callbackIn){
 
         // perform the actual grouping
         function(callback){
+// console.log()
+console.log('asdf')
             models.groupAgreement.group(callback)
         },
 
