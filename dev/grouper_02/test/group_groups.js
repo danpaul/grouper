@@ -1,11 +1,13 @@
 var groupGroup = {}
 
 var config = require('../config')
+
 var async = require('async')
+var assert = require('assert')
+
 var seed = require('../lib/seed')
 var models = require('../models/models')
 var _ = require('underscore')
-
 
 groupGroup.runTest = function(settings, callbackIn){
 
@@ -53,7 +55,7 @@ groupGroup.runTest = function(settings, callbackIn){
             _.each(_.range(settings.numberOfGroupings), function(){
                 groupings.push([])
             })
-// console.log(groupings[0])
+
             var currentGrouping = 0;
             for( var i = 0; i <  groupIds.length; i++ ){
                 groupings[currentGrouping].push(groupIds[i])
@@ -68,31 +70,36 @@ groupGroup.runTest = function(settings, callbackIn){
         // for each group grouping
         // get all users in those groupings
         function(callback){
-console.log(1)
             async.eachSeries(groupings, function(grouping, callbackB){
                 // each grouping contains an array of group ids
-                // get all the users that belong to any of the groups in any of the group ids
+                // get all the users that belong to any of the groups
+                // in any of the group ids
                 var users = [];
                 _.each(grouping, function(groupId){
                     users = users.concat(groupUserMap[groupId.toString()])
                 })
                 // foreach post
                 async.eachSeries(postIds, function(postId, callbackC){
-                    var bias = models.vote.getRandomBias(settings.testBias);
+                    var bias = models.vote.getRandomBias(settings.testBias)
                     // foreach user
                     async.eachSeries(users, function(userId, callbackD){
+
                         // determine vote
                         var vote = models.vote.getVoteFromBias(bias);
+
                         // cast user vote
-                        models.userVote.vote(userId, null, postId, vote, callbackD)
-                        // userModel.castVote(userId, postId, vote, callbackD);
+                        models.userVote.vote(userId,
+                                             null,
+                                             postId,
+                                             vote,
+                                             callbackD)
+
                     }, function(err){
                         if( err ){ callbackC(err); }
                         else{ callbackC(); }
                     })
                 },
                 function(err){
-console.log(3)
                     if( err ){ callbackB(err); }
                     else{
                         callbackB()
@@ -103,29 +110,32 @@ console.log(3)
 
         // perform the actual grouping
         function(callback){
-// console.log()
-console.log('asdf')
             models.groupAgreement.group(callback)
         },
 
-        // // check groupings
-        // function(callback){
-        //     async.eachSeries(groupings, function(grouping, callbackB){
+        // check groupings
+        function(callback){
+            async.eachSeries(groupings, function(grouping, callbackB){
 
-        //         // get agreeing groups
-        //         groupAgreementModel.getAgreeingGroups(grouping[0],
-        //                                               2,
-        //                                               function(err, groupAgreements){
-        //             if(err){ callbackB(err); }
-        //             else{
-        //                 _.each(groupAgreements, function(agreement){
-        //                     assert(_.contains(grouping, agreement.group))
-        //                 })
-        //                 callbackB()                        
-        //             }
-        //         })
-        //     }, callback)
-        // }
+                // get agreeing groups
+                models.groupAgreement.getAgreeingGroups(grouping[0],
+                                                        2,
+                                                        function(
+                                                            err,
+                                                            groupAgreements){
+
+                    if(err){ callbackB(err); }
+                    else{
+
+                        _.each(groupAgreements, function(agreement){
+                            assert(_.contains(grouping, agreement.group),
+                                   'Agreements are not correct')
+                        })
+                        callbackB()
+                    }
+                })
+            }, callback)
+        }
     ], function(err){
         if(err){ callbackIn(err) }
         else{ callbackIn(); }

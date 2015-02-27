@@ -29,11 +29,15 @@ module.exports = {
     	maximumGroupsToCompare: 5
 	},
 
+	// These probably should not be changed
 	groupGroup: {
-		numberOfGroups: 10,
-		numberOfUsers: 100,
-		numberOfPosts: 100,
-		numberOfGroupings: 10,
-		testBias: 0.4
+	    // numberOfCycles: 100,
+	    numberOfUsers: 81,
+	    numberOfGroups: 9,
+	    numberOfGroupings: 3,
+	    numberOfPosts: 20,
+	    testBias: 0.3
 	}
+
+
 }

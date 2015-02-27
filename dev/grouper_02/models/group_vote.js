@@ -50,15 +50,15 @@ groupVote.getRecentOrderedPosts = function(groupIds,
                                            numberOfPosts,
                                            callbackIn){
 
-    // if( !_.isArray(groupIds) ){ groupIds = [groupIds]; }
+    if( !_.isArray(groupIds) ){ groupIds = [groupIds]; }
 
-    // knex(TABLE_NAME)
-    //     .select(['post', 'percentage_up', 'total', 'rank'])
-    //     .whereIn('group', groupIds)
-    //     .orderBy('rank', 'desc')
-    //     .limit(numberOfPosts)
-    //     .then(function(groupVotes){ callbackIn(null, groupVotes)})
-    //     .catch(callbackIn)
+    knex(TABLE_NAME)
+        .select(['post', 'percentage_up', 'total', 'rank'])
+        .whereIn('group', groupIds)
+        .orderBy('rank', 'desc')
+        .limit(numberOfPosts)
+        .then(function(groupVotes){ callbackIn(null, groupVotes)})
+        .catch(callbackIn)
 }
 
 /**
