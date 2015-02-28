@@ -1,0 +1,4 @@
+
++ set flag for init. in models file before and after intit
+
++ remove sync from models file
