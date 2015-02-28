@@ -32,7 +32,7 @@ async.waterfall([
         require('./group').runTest(settings.group, callback)
     },
     // emptyDatabase,
-    function(callback){
+    function(groupAverages, callback){
         console.log('Group tests passed')
         require('./group_groups').runTest(settings.groupGroup, callback)
     }

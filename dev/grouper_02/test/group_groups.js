@@ -136,7 +136,12 @@ groupGroup.runTest = function(settings, callbackIn){
                 })
             }, callback)
         }
-    ], function(err){
+    ], function(err, foo){
+
+// asdf 
+console.log(JSON.stringify(callbackIn))
+console.log(foo)
+
         if(err){ callbackIn(err) }
         else{ callbackIn(); }
     })
