@@ -1,25 +1,25 @@
 {
   "name": "grouper",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.0.0",
+  "description": "Content ",
+  "main": "index.js",
   "scripts": {
-    "start": "node ./bin/www"
+    "test": "node test/index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danpaul/grouper"
+  },
+  "author": "Dan Breczinski <pt2323@gmail.com> (https://github.com/danpaul)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/danpaul/grouper/issues"
+  },
+  "homepage": "https://github.com/danpaul/grouper",
   "dependencies": {
-    "async": "~0.9.0",
-    "bcrypt": "~0.7.8",
-    "body-parser": "~1.0.0",
-    "cookie-parser": "~1.0.1",
-    "debug": "~0.7.4",
-    "decay": "^1.0.8",
-    "express": "~4.2.0",
-    "express-session": "~1.7.2",
-    "jade": "~1.3.0",
-    "knex": "0.7.3",
-    "morgan": "~1.0.0",
-    "mysql": "~2.4.1",
-    "sequelize": "~1.7.9",
-    "static-favicon": "~1.0.0",
-    "underscore": "~1.7.0"
+    "async": "^0.9.0",
+    "knex": "^0.7.3",
+    "mysql": "^2.5.4",
+    "underscore": "^1.8.1"
   }
 }

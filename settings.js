@@ -1,33 +1,12 @@
-module.exports.init = function(app){
+var settings = {}
 
-    var client = 'mysql';
-    var db = {};
-    var env = app.get('GROUPER_ENV');
-    var knex;
-    var pool = {};
+settings.groupAgreement = {
+	// the max # of posts to compare between groups
+	maxPoststoCompare: 1000,
+	// minumum number of total votes to make comparison for a single post
+	minVotesForComparison: 3,
+	// will only update total if this many successful comparisons are made
+	minComparisonsToUpdate: 2
+}
 
-    // set a local app reference
-    global.grouper_app = app;
-
-    if( env === 'local' ){
-        db.host = 'localhost';
-        db.user = 'root';
-        db.password = 'root';
-        db.database = 'grouper';
-        db.port = 8889;
-
-        pool.min = 0;
-        pool.max = 10;
-        debug = false;
-    }
-
-    knex = require('knex')({
-        'client': client,
-        'connection': db,
-        'pool': pool,
-        'debug': debug
-    });
-
-    app.set('GROUPER_KNEX', knex);
-
-};
+module.exports = settings
